@@ -5,8 +5,8 @@ Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 8.0
 Stable tag: 1.0.0
-License: GPL-v2
-License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+License: Modified BSD License
+License URI: https://directory.fsf.org/wiki/License:BSD-3-Clause
 
 Extends WP-PostViews with bot and referer filtering based on data/bots.json, including strict domain matching and an admin update tool.
 

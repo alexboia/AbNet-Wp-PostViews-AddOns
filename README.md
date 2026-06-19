@@ -7,7 +7,7 @@
 
 ## Features
 
-- Extends WP-PostViews through the native `postviews_should_count` filter;
+- Extends [WP-PostViews](https://github.com/lesterchan/wp-postviews) through its native `postviews_should_count` filter;
 - Blocks requests by User-Agent patterns from `data/bots.json` (`bots` section);
 - Blocks requests by Referer patterns from `data/bots.json` (`referers` section);
 - Supports strict referer-domain matching (exact domain or subdomain only);
@@ -27,7 +27,7 @@ In strict mode, referer checks are host/domain-aware instead of simple substring
 ## Requirements
 
 - WordPress 6.x;
-- PHP 7.4+;
+- PHP 8.0+;
 - WP-PostViews plugin active;
 - PHP cURL extension recommended for downloading bots updates.
 
@@ -139,13 +139,22 @@ The plugin reads `data/bots.json`. Typical structure:
 
 ## Tools Page
 
-Under Tools > ABNet Post Views Addons:
+Under `Tools` > `ABNet Post Views Addons`:
 
 - `Update` tab:
   - downloads latest source and merges only the `bots` section;
   - can use last downloaded file as fallback.
+
 - `Current bots.json` tab:
   - displays all current sections and values from local `data/bots.json`.
+
+## Screenshots
+
+### Tools - Update tab
+![Tools - Update tab](screenshots/tools-tab-update.png)
+
+### Tools - Current bots tab
+![Tools - Current bots tab](screenshots/tools-tab-current-bots-json.png)
 
 ## Support Script (`support/test.php`)
 

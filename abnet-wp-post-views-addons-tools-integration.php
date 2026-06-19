@@ -51,7 +51,7 @@ final class ABNet_WP_Post_Views_Addons_Tools_Integration {
 		}
 
 		$status = isset($_GET['status']) 
-			? sanitize_key( (string) $_GET['status'] ) 
+			? sanitize_key((string) $_GET['status']) 
 			: '';
 
 		$activeTab = isset($_GET['tab']) 
@@ -62,7 +62,9 @@ final class ABNet_WP_Post_Views_Addons_Tools_Integration {
 			$activeTab = self::TAB_UPDATE;
 		}
 
-		$viewPath = plugin_dir_path($this->_pluginFile) . 'views/tools-page.php';
+		$viewPath = plugin_dir_path($this->_pluginFile) 
+			. 'views' .  DIRECTORY_SEPARATOR 
+			. 'tools-page.php';
 
 		if (!file_exists($viewPath)) {
 			$this->_viewFileMissingError();
