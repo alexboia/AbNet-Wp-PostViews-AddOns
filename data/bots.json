@@ -225,14 +225,9 @@
     ],
     "referers": [
         "t.co",
-        "x.com",
-        "twitter.com",
         "l.facebook.com",
         "lm.facebook.com",
-        "m.facebook.com",
-        "facebook.com",
         "messenger.com",
-        "linkedin.com",
         "lnkd.in",
         "t.me",
         "telegram.me",
@@ -252,12 +247,6 @@
         "pin.it",
         "vk.com",
         "ok.ru",
-        "snapchat.com",
-        "youtube.com",
-        "youtu.be",
-        "mail.google.com",
-        "outlook.live.com",
-        "search.yahoo.com",
-        "bing.com"
+        "youtu.be"
     ]
 }
