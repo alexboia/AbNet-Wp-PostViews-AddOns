@@ -96,12 +96,12 @@ final class ABNet_WP_Post_Views_Addons {
 		$userAgentDesc = !empty($userAgent) ? $userAgent : "<NO USER AGENT>";
 		$refererDesc = !empty($referer) ? $referer : "<NO REFERER>";
 
-		if ($this->_matchesAnyPattern($userAgent, $this->_getBotPatterns())) {
+		if ($this->_matchesAnyBotPattern($userAgent, $this->_getBotPatterns())) {
 			abnet_write_log("Request {$userAgentDesc}/{$refererDesc} rejected because it matches bot patterns.");
 			return false;
 		}
 
-		if ($this->_matchesAnyPattern($referer, $this->_getRefererPatterns(), $strictMode)) {
+		if ($this->_matchesAnyRefererPattern($referer, $this->_getRefererPatterns(), $strictMode)) {
 			abnet_write_log("Request {$userAgentDesc}/{$refererDesc} rejected because it matches referer patterns.");
 			return false;
 		}
@@ -121,18 +121,22 @@ final class ABNet_WP_Post_Views_Addons {
 			: '';
 	}
 
+	private function _matchesAnyBotPattern(string|null $value, array $patterns): bool {
+		if (empty($value) || empty($patterns)) {
+			return false;
+		}
+
+		return $this->_matchesAnyPattern($value, $patterns);
+	}
+
 	/**
 	 * @param string   $value
 	 * @param string[] $patterns
 	 * @return bool
 	 */
-	private function _matchesAnyPattern($value, array $patterns, $strict = false): bool {
+	private function _matchesAnyPattern(string $value, array $patterns): bool {
 		if (empty($value) || empty($patterns)) {
 			return false;
-		}
-
-		if ($strict) {
-			return $this->_matchesAnyRefererDomain($value, $patterns);
 		}
 
 		foreach ($patterns as $pattern) {
@@ -142,6 +146,18 @@ final class ABNet_WP_Post_Views_Addons {
 		}
 
 		return false;
+	}
+
+	private function _matchesAnyRefererPattern(string|null $value, array $patterns, $strict = false): bool {
+		if (empty($value) || empty($patterns)) {
+			return false;
+		}
+
+		if ($strict) {
+			return $this->_matchesAnyRefererDomain($value, $patterns);
+		}
+
+		return $this->_matchesAnyPattern($value, $patterns);
 	}
 
 	/**

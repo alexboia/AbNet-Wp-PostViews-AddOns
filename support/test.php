@@ -79,12 +79,12 @@ function readBotsAndReferers(string $botsFilePath): array {
 
 	$decoded = json_decode($content, true);
 	if (!is_array($decoded) || json_last_error() !== JSON_ERROR_NONE) {
-		fwrite(STDERR, colorText("bots.json is invalid JSON.\n", ANSI_RED));
+		displayError("bots.json is invalid JSON.\n");
 		exit(1);
 	}
 
 	if (!isset($decoded['bots']) || !is_array($decoded['bots'])) {
-		fwrite(STDERR, colorText("bots.json does not contain a valid 'bots' array.\n", ANSI_RED));
+		displayError("bots.json does not contain a valid 'bots' array.\n");
 		exit(1);
 	}
 
@@ -94,7 +94,7 @@ function readBotsAndReferers(string $botsFilePath): array {
 		: [];
 
 	if (empty($bots)) {
-		fwrite(STDERR, colorText("No bot user agents found in bots.json.\n", ANSI_RED));
+		displayError("No bot user agents found in bots.json.\n");
 		exit(1);
 	}
 
@@ -283,13 +283,13 @@ foreach ($args as $arg) {
 }
 
 if ($url === '' || filter_var($url, FILTER_VALIDATE_URL) === false) {
-	fwrite(STDERR, colorText("Please provide a valid URL.\n", ANSI_RED));
+	displayError("Please provide a valid URL.\n");
 	printUsage();
 	exit(1);
 }
 
 if (!function_exists('curl_init')) {
-	fwrite(STDERR, colorText("PHP cURL extension is required.\n", ANSI_RED));
+	displayError("PHP cURL extension is required.\n");
 	exit(1);
 }
 
@@ -300,7 +300,7 @@ $referers = $sources['referers'];
 $scenarios = buildScenarios($bots, $referers);
 
 if (empty($scenarios)) {
-	fwrite(STDERR, colorText("No scenarios available to test.\n", ANSI_RED));
+	displayError("No scenarios available to test.\n");
 	exit(1);
 }
 
@@ -329,7 +329,7 @@ foreach ($scenarios as $index => $scenario) {
 
 	if ($result['error'] !== '') {
 		$errorCount++;
-		echo colorText("  ERROR: {$result['error']}\n", ANSI_RED);
+		displayError("  ERROR: {$result['error']}\n");
 	} else {
 		$successCount++;
 		$statusColor = ($result['httpCode'] >= 200 && $result['httpCode'] < 400) 
