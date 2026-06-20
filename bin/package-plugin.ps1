@@ -4,7 +4,9 @@
 param(
     [string]$OutputPath = "./dist",
     [string]$PluginName = "abnet-wp-post-views-addons",
-    [string]$Version = "1.0.0",
+    [string]$VersionConstant = "ABNET_WP_POST_VIEWS_VERSION",
+    [string]$PluginHeaderFile = "constants.php",
+    [string]$Version = "1.0.1",
     [switch]$IncludeDevFiles = $false,
     [switch]$ExportUnarchived = $false,
     [switch]$Verbose = $false
@@ -195,12 +197,14 @@ function Update-VersionInfo {
     }
 
     # Update version constant
-    $constantsFile = Join-Path $PluginDir "constants.php"
-    if (Test-Path $constantsFile) {
-        $content = Get-Content $constantsFile -Raw
-        $content = $content -replace "(define\('ABNET_WP_POST_VIEWS_VERSION',\s+')[^']*(')", "`${1}$Version`${2}"
-        Set-Content $constantsFile $content -Encoding UTF8
-        Write-Log "Updated version in constants.php" "SUCCESS"
+    if ($PluginHeaderFile -ne $null -and $PluginHeaderFile -ne "" -and $VersionConstant -ne $null -and $VersionConstant -ne "") {
+        $constantsFile = Join-Path $PluginDir $PluginHeaderFile
+        if (Test-Path $constantsFile) {
+            $content = Get-Content $constantsFile -Raw
+            $content = $content -replace "(define\('$VersionConstant',\s+')[^']*(')", "`${1}$Version`${2}"
+            Set-Content $constantsFile $content -Encoding UTF8
+            Write-Log "Updated version in constants.php" "SUCCESS"
+        }
     }
     
     # Update readme.txt if it exists
@@ -295,12 +299,12 @@ function Show-Summary {
     Write-Host "================================================" -ForegroundColor Green
     Write-Host "           PLUGIN PACKAGING COMPLETE" -ForegroundColor Green
     Write-Host "================================================" -ForegroundColor Green
-    Write-Host "Plugin Name    : $PluginName" -ForegroundColor White
-    Write-Host "Version        : $Version" -ForegroundColor White
-    Write-Host "Archive        : $($archiveInfo.Name)" -ForegroundColor White
-    Write-Host "Size           : $sizeKB KB" -ForegroundColor White
-    Write-Host "Location       : $($archiveInfo.FullName)" -ForegroundColor White
-    Write-Host "Build Time     : $BuildTime" -ForegroundColor White
+    Write-Host "Plugin Name : $PluginName" -ForegroundColor White
+    Write-Host "Version : $Version" -ForegroundColor White
+    Write-Host "Archive : $($archiveInfo.Name)" -ForegroundColor White
+    Write-Host "Size : $sizeKB KB" -ForegroundColor White
+    Write-Host "Location : $($archiveInfo.FullName)" -ForegroundColor White
+    Write-Host "Build Time : $BuildTime" -ForegroundColor White
     Write-Host "================================================" -ForegroundColor Green
     Write-Host "`nArchive is ready for WordPress installation!" -ForegroundColor Yellow
 }
@@ -346,8 +350,7 @@ try {
     $buildTime = "{0:mm\:ss}" -f ($endTime - $startTime)
     Show-Summary $outputFile $buildTime
     
-}
-catch {
+} catch {
     Write-Log "Packaging failed: $($_.Exception.Message)" "ERROR"
     
     # Clean up on error

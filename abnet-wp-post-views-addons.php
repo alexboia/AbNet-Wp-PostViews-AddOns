@@ -170,12 +170,7 @@ final class ABNet_WP_Post_Views_Addons {
 			&& ABNET_WP_POST_VIEWS_STRICT === true;
 	}
 
-	/**
-	 * @param string   $referer
-	 * @param string[] $patterns
-	 * @return bool
-	 */
-	private function _matchesAnyRefererDomain($referer, array $patterns): bool {
+	private function _matchesAnyRefererDomain(string $referer, array $patterns): bool {
 		$refererHost = wp_parse_url($referer, PHP_URL_HOST);
 		if (!is_string($refererHost) || empty($refererHost)) {
 			return false;
@@ -204,11 +199,7 @@ final class ABNet_WP_Post_Views_Addons {
 				=== $subdomainSuffix;
 	}
 
-	/**
-	 * @param string $domain
-	 * @return string
-	 */
-	private function _normalizeDomain($domain): string|null {
+	private function _normalizeDomain(string $domain): string|null {
 		$domain = trim(strtolower((string) $domain));
 		if (empty($domain)) {
 			return '';
