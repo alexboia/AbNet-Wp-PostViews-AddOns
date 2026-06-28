@@ -225,28 +225,15 @@
     ],
     "referers": [
         "t.co",
-        "l.facebook.com",
-        "lm.facebook.com",
-        "messenger.com",
-        "lnkd.in",
-        "t.me",
-        "telegram.me",
-        "web.telegram.org",
-        "whatsapp.com",
         "l.whatsapp.com",
         "api.whatsapp.com",
         "wa.me",
         "chat.whatsapp.com",
-        "slack.com",
         "discord.com",
         "l.instagram.com",
-        "instagram.com",
         "reddit.com",
         "out.reddit.com",
-        "pinterest.com",
-        "pin.it",
         "vk.com",
-        "ok.ru",
-        "youtu.be"
+        "ok.ru"
     ]
 }
