@@ -19,6 +19,11 @@ if (!defined( 'ABSPATH')) {
 
 require_once __DIR__ . DIRECTORY_SEPARATOR . 'constants.php';
 require_once __DIR__ . DIRECTORY_SEPARATOR . 'functions.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'abnet-wp-post-views-addons-visit-context.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'abnet-wp-post-views-addons-visit-info.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'abnet-wp-post-views-addons-visit-info-collector.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'abnet-wp-post-views-addons-db.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'abnet-wp-post-views-addons-datasource.php';
 require_once __DIR__ . DIRECTORY_SEPARATOR . 'abnet-wp-post-views-addons-referer-pattern-loader.php';
 require_once __DIR__ . DIRECTORY_SEPARATOR . 'abnet-wp-post-views-addons-referer-pattern-updater.php';
 require_once __DIR__ . DIRECTORY_SEPARATOR . 'abnet-wp-post-views-addons-tools-integration.php';
@@ -50,23 +55,54 @@ final class ABNet_WP_Post_Views_Addons {
 	private $_toolsIntegration = null;
 
 	/**
+	 * @var ABNet_WP_Post_Views_Addons_Datasource
+	 */
+	private $_dataSource;
+
+	/**
 	 * @return ABNet_WP_Post_Views_Addons
 	 */
 	public static function getInstance(): ABNet_WP_Post_Views_Addons {
 		if ( null === self::$_instance ) {
+			register_activation_hook(__FILE__, array('ABNet_WP_Post_Views_Addons', 'activate'));
 			self::$_instance = new self();
 		}
 
 		return self::$_instance;
 	}
 
-	private function __construct() {
-		return;
+	public static function activate() {
+		ABNet_WP_Post_Views_Addons_Db::setup();
 	}
 
-	public function init(): void {
+	private function __construct() {
+		$this->_dataSource = new ABNet_WP_Post_Views_Addons_Datasource();
+	}
+
+	public function run(): void {
+		add_action('init', array($this, 'onWpInit'), 10);
 		add_filter( 'postviews_should_count', array( $this, 'filterPostviewsShouldCount' ), 20, 2 );
 		$this->_getToolsIntegration()->init();
+	}
+
+	public function onWpInit(): void {
+		$this->_migrateTablesIfVersionDiffers();
+	}
+
+	private function _migrateTablesIfVersionDiffers() {
+		$registered = $this->_getRegisteredVersion();
+		if (version_compare($registered, ABNET_WP_POST_VIEWS_VERSION, '!=')) {
+			ABNet_WP_Post_Views_Addons_Db::setup();
+			$this->_updateRegisteredVersion(ABNET_WP_POST_VIEWS_VERSION);
+		}
+	}
+
+	private function _getRegisteredVersion(): string|null {
+		return get_option('abnet_wp_post_views_addons_version', '1.0');
+	}
+
+	private function _updateRegisteredVersion(string $version): void {
+		update_option('abnet_wp_post_views_addons_version', $version, true);
 	}
 
 	/**
@@ -76,18 +112,36 @@ final class ABNet_WP_Post_Views_Addons {
 	 * @param int  $postId
 	 * @return bool
 	 */
-	public function filterPostviewsShouldCount($shouldCount, $postId): bool {
+	public function filterPostviewsShouldCount($shouldCount, $postId): bool {	
+		$trackingEnabled = $this->_isTrackingEnabled();
+		$botExclusionEnabled = $this->_isWpPostviewsBotExclusionEnabled();
+		$context = ABNet_WP_Post_Views_Addons_VisitContext::getInstance();
+
+		if ($trackingEnabled || $botExclusionEnabled) {
+			$this->_evaluatePostVisit($context);
+		}
+
+		if ($trackingEnabled) {
+			$this->_trackPostView($context);
+		}
+
 		if (!$shouldCount) {
 			return false;
 		}
 
-		if (!$this->_isWpPostviewsBotExclusionEnabled()) {
-			return true;
+		if ($botExclusionEnabled) {
+			return !$context->isBot() 
+				&& !$context->isFilteredReferer() 
+				&& !$context->isSpamReferer();
 		}
+		
+		return true;
+	}
 
+	private function _evaluatePostVisit(ABNet_WP_Post_Views_Addons_VisitContext $context) {
 		$strictMode = $this->_isStrictMode();
 		
-		abnet_write_log(sprintf("Stric mode: %s.", 
+		abnet_write_log(sprintf("Strict mode: %s.", 
 			$strictMode ? "Yes" : "No"));
 
 		$userAgent = $this->_determineUserAgent();
@@ -97,27 +151,45 @@ final class ABNet_WP_Post_Views_Addons {
 		$refererDesc = !empty($referer) ? $referer : "<NO REFERER>";
 
 		if ($this->_matchesAnyBotPattern($userAgent, $this->_getBotPatterns())) {
-			abnet_write_log("Request {$userAgentDesc}/{$refererDesc} rejected because it matches bot patterns.");
-			return false;
+			abnet_write_log("Request {$userAgentDesc}/{$refererDesc} matches bot patterns.");
+			$context->flagBot();
 		}
 
 		if ($this->_matchesAnyRefererPattern($referer, $this->_getRefererPatterns(), $strictMode)) {
-			abnet_write_log("Request {$userAgentDesc}/{$refererDesc} rejected because it matches referer patterns.");
-			return false;
+			abnet_write_log("Request {$userAgentDesc}/{$refererDesc} matches referer patterns.");	
+			$context->flagFilteredReferer();
 		}
 
-		return true;
+		if (!$context->isBot() 
+			&& !$context->isFilteredReferer() 
+			&& !$context->isSpamReferer()) {
+			$context->flagCounted();
+		}
+	}
+
+	private function _trackPostView(ABNet_WP_Post_Views_Addons_VisitContext $context) {
+		try {
+			$collector = new ABNet_WP_Post_Views_Addons_VisitInfoCollector();
+			$visitInfo = $collector->collectVisitInfo($context);
+			$result = $this->_dataSource->saveVisitInfo($visitInfo);
+
+			if (false === $result) {
+				ABNet_WP_Post_Views_Addons_Db::logLastDbError('Failed to save visit info');
+			}
+		} catch (Throwable $throwable) {
+			abnet_write_throwable($throwable, 'Failed to track post view: %s in %s on line %d');
+		}
 	}
 
 	private function _determineUserAgent(): string {
 		return isset($_SERVER['HTTP_USER_AGENT']) 
-			? (string) $_SERVER['HTTP_USER_AGENT'] 
+			? sanitize_text_field((string) $_SERVER['HTTP_USER_AGENT'] )
 			: '';
 	}
 
 	private function _determineReferer(): string {
 		return isset($_SERVER['HTTP_REFERER']) 
-			? (string) $_SERVER['HTTP_REFERER'] 
+			? sanitize_text_field((string) $_SERVER['HTTP_REFERER'] )
 			: '';
 	}
 
@@ -162,12 +234,14 @@ final class ABNet_WP_Post_Views_Addons {
 
 	/**
 	 * Strict mode is active only when ABNET_WP_POST_VIEWS_STRICT exists and is boolean true.
-	 *
-	 * @return bool
 	 */
 	private function _isStrictMode(): bool {
 		return defined( 'ABNET_WP_POST_VIEWS_STRICT' ) 
 			&& ABNET_WP_POST_VIEWS_STRICT === true;
+	}
+
+	private function _isTrackingEnabled(): bool {
+		return abnet_wp_post_views_addons_tracking_enabled() === true;
 	}
 
 	private function _matchesAnyRefererDomain(string $referer, array $patterns): bool {
@@ -260,7 +334,7 @@ final class ABNet_WP_Post_Views_Addons {
 			return $this->_refererPatterns;
 		}
 
-		$this->_refererPatterns = $this->_getRefererPatternLoader()->loadPatterns();
+		$this->_refererPatterns = $this->_getRefererPatternLoader()->loadRefererPatterns();
 		return $this->_refererPatterns;
 	}
 
@@ -288,4 +362,4 @@ final class ABNet_WP_Post_Views_Addons {
 
 }
 
-ABNet_WP_Post_Views_Addons::getInstance()->init();
+ABNet_WP_Post_Views_Addons::getInstance()->run();

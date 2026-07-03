@@ -199,7 +199,7 @@ final class ABNet_WP_Post_Views_Addons_RefererPatternUpdater {
 				continue;
 			}
 
-			$bot = trim($bot);
+			$bot = trim(sanitize_text_field($bot));
 			if ('' === $bot) {
 				continue;
 			}

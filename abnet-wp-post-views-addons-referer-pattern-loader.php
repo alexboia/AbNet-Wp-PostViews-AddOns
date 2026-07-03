@@ -68,7 +68,7 @@ final class ABNet_WP_Post_Views_Addons_RefererPatternLoader {
 	/**
 	 * @return string[]
 	 */
-	public function loadPatterns(): array {
+	public function loadRefererPatterns(): array {
 		$decoded = $this->_readBotFileEntries();
 
 		$entries = array();

@@ -224,16 +224,14 @@
         "ZanistaBot"
     ],
     "referers": [
-        "t.co",
         "l.whatsapp.com",
         "api.whatsapp.com",
-        "wa.me",
         "chat.whatsapp.com",
         "discord.com",
         "l.instagram.com",
-        "reddit.com",
-        "out.reddit.com",
-        "vk.com",
-        "ok.ru"
+        "out.reddit.com"
+    ],
+    "spamReferers": [
+        
     ]
 }

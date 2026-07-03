@@ -5,6 +5,14 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
+if (!function_exists('abnet_wp_post_views_addons_tracking_enabled')) {
+	function abnet_wp_post_views_addons_tracking_enabled(): bool {
+		return defined('ABNET_WP_POST_VIEWS_TRACKING_ENABLED')
+			? ABNET_WP_POST_VIEWS_TRACKING_ENABLED === true
+			: true;
+	}
+}
+
 if (!function_exists('abnet_wp_post_views_addons_bot_exclusion_enabled')) {
 	function abnet_wp_post_views_addons_bot_exclusion_enabled(): bool {
 		$viewsOptions = get_option( 'views_options' );
@@ -56,5 +64,16 @@ if (!function_exists('abnet_write_log')) {
 				error_log($data);
 			}
 		}
+	}
+}
+
+if (!function_exists('abnet_write_throwable')) {
+	function abnet_write_throwable(\Throwable $throwable, string $contextMessage) {
+		abnet_write_log(sprintf(
+			$contextMessage,
+			$throwable->getMessage(),
+			$throwable->getFile(),
+			$throwable->getLine()
+		));
 	}
 }
