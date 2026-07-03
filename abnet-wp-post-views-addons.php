@@ -121,21 +121,23 @@ final class ABNet_WP_Post_Views_Addons {
 			$this->_evaluatePostVisit($context);
 		}
 
+		$countView = $shouldCount;
+		if ($botExclusionEnabled) {
+			$countView = $countView 
+				&& !$context->isBot() 
+				&& !$context->isFilteredReferer() 
+				&& !$context->isSpamReferer();
+		}
+
+		if ($countView) {
+			$context->flagCounted();
+		}
+
 		if ($trackingEnabled) {
 			$this->_trackPostView($context);
 		}
 
-		if (!$shouldCount) {
-			return false;
-		}
-
-		if ($botExclusionEnabled) {
-			return !$context->isBot() 
-				&& !$context->isFilteredReferer() 
-				&& !$context->isSpamReferer();
-		}
-		
-		return true;
+		return $countView;
 	}
 
 	private function _evaluatePostVisit(ABNet_WP_Post_Views_Addons_VisitContext $context) {
@@ -158,12 +160,6 @@ final class ABNet_WP_Post_Views_Addons {
 		if ($this->_matchesAnyRefererPattern($referer, $this->_getRefererPatterns(), $strictMode)) {
 			abnet_write_log("Request {$userAgentDesc}/{$refererDesc} matches referer patterns.");	
 			$context->flagFilteredReferer();
-		}
-
-		if (!$context->isBot() 
-			&& !$context->isFilteredReferer() 
-			&& !$context->isSpamReferer()) {
-			$context->flagCounted();
 		}
 	}
 
