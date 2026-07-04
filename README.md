@@ -45,12 +45,16 @@ Define constants in `wp-config.php` before WordPress loads plugins.
 | Constant | Type | Default | Purpose |
 |----------|------|---------|---------|
 | `ABNET_WP_POST_VIEWS_STRICT` | bool | `false` (when undefined) | Enables strict referer host matching (`example.com` and `*.example.com`). |
+| `ABNET_WP_POST_VIEWS_TRACKING_ENABLED` | bool | `true` (when undefined) | Enables storing tracked visit metadata. Set to `false` to keep bot exclusion behavior without saving visit rows. |
+| `ABNET_WP_POST_VIEWS_FUZZY_BOT_SCORE_THRESHOLD` | int | `65` (when undefined, non-int, or `<= 0`) | Minimum fuzzy bot score that auto-flags a request as bot after score calculation. |
 | `ABNET_WP_POST_VIEWS_AI_ROBOTS_TXT_URL` | string | `https://raw.githubusercontent.com/ai-robots-txt/ai.robots.txt/main/robots.json` | Overrides the source URL used by the updater. |
 
 ### Example
 
 ```php
 define('ABNET_WP_POST_VIEWS_STRICT', true);
+define('ABNET_WP_POST_VIEWS_TRACKING_ENABLED', true);
+define('ABNET_WP_POST_VIEWS_FUZZY_BOT_SCORE_THRESHOLD', 65);
 define('ABNET_WP_POST_VIEWS_AI_ROBOTS_TXT_URL', 'https://raw.githubusercontent.com/ai-robots-txt/ai.robots.txt/main/robots.json');
 ```
 

@@ -147,7 +147,8 @@ namespace ABNetWpPostViewsAddons {
 			$fuzzyBotScore = $this->_filterFuzzyBotScoreScore($fuzzyBotScore, $visitInfo);
 			$context->setFuzzyBotScore($fuzzyBotScore->getScore());
 			
-			if (!$context->isBot() && $context->getFuzzyBotScore() >= 75) {
+			$autoFlagScoreThreshold = $this->_flagBotIfFuzzyScoreMoreThan();
+			if (!$context->isBot() && $context->getFuzzyBotScore() >= $autoFlagScoreThreshold) {
 				$context->flagBot();
 			}
 			
@@ -349,5 +350,21 @@ namespace ABNetWpPostViewsAddons {
 			return $this->_toolsIntegration;
 		}
 
+		private function _flagBotIfFuzzyScoreMoreThan(): int {
+			//abnet_wpv_addons_fuzzy_bot_score
+			$min = 0;
+			if (defined('ABNET_WP_POST_VIEWS_FUZZY_BOT_SCORE_THRESHOLD')) {
+				$value = constant('ABNET_WP_POST_VIEWS_FUZZY_BOT_SCORE_THRESHOLD');
+				if (is_int($value)) {
+					$min = $value;
+				}
+			}
+
+			if ($min <= 0) {
+				$min = 65;
+			}
+
+			return $min;
+		}
 	}
 }
