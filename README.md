@@ -165,7 +165,7 @@ Note: this script is for development/support workflows and is not distributed wi
 Usage:
 
 ```bash
-php test.php <url> [--limit=NUMBER] [--auto-batch] [--no-delay]
+php test.php <url> [--limit=NUMBER] [--auto-batch] [--no-delay] [--legit-requests]
 ```
 
 Parameters:
@@ -174,12 +174,14 @@ Parameters:
 - `--limit=NUMBER`: Optional. Maximum number of scenarios to run from the beginning. Use `0` (default) to run all scenarios from `bots.json`.
 - `--auto-batch`: Optional. Skips confirmation prompt between batches.
 - `--no-delay`: Optional. Disables random delay (1-2s) between requests.
+- `--legit-requests`: Optional. Emits legitimate-looking browser requests with random normal/search referers, required `Accept` and `Accept-Language` headers, and optional Cloudflare country/AS headers. If no positive `--limit` is provided, 50 requests are sent.
 
 Examples:
 
 ```bash
 php test.php "https://example.com/article" --limit=25
 php test.php "https://example.com/article" --auto-batch --no-delay
+php test.php "https://example.com/article" --legit-requests --limit=50
 ```
 
 ![Running the test tool](/screenshots/testing-tool.gif)

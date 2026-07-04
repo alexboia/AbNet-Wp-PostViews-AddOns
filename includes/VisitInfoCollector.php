@@ -382,8 +382,8 @@ namespace ABNetWpPostViewsAddons {
 		}
 
 		private function _getCfIpAsName(): string|null {
-			return !empty($_SERVER['HTTP_CF_IPAS_NAME'])
-				? sanitize_text_field($_SERVER['HTTP_CF_IPAS_NAME'])
+			return !empty($_SERVER['HTTP_CF_ASN_NAME'])
+				? sanitize_text_field($_SERVER['HTTP_CF_ASN_NAME'])
 				: null;
 		}
 	}

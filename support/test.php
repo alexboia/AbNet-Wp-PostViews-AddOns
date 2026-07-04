@@ -17,6 +17,8 @@ const ANSI_CYAN = "\033[36m";
 const LIMIT_ARG_PREFIX = '--limit=';
 const AUTO_BATCH_ARG_PREFIX = '--auto-batch';
 const NO_DELAY_ARG_PREFIX = '--no-delay';
+const LEGIT_REQUESTS_ARG = '--legit-requests';
+const DEFAULT_LEGIT_REQUEST_LIMIT = 50;
 
 const BROWSER_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
 
@@ -44,12 +46,143 @@ Parameters:
 					 	Use 0 (default) to run all scenarios from bots.json.
 	--auto-batch     Optional. Skip confirmation prompt between batches.
 	--no-delay       Optional. Disable random delay (1-2s) between requests.
+	--legit-requests Optional. Emit legitimate-looking requests. If no positive --limit specified, 50 will be issued. The remainder of the parameters still apply.
 
 Examples:
   	php test.php "https://example.com/article" --limit=25
 	php test.php "https://example.com/article" --auto-batch --no-delay
+	php test.php "https://example.com/article" --legit-requests --limit=50
 TXT;
 	echo $usage . PHP_EOL;
+}
+
+function getLegitimateUserAgents(): array {
+	return [
+		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
+		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
+		"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+		"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
+		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:128.0) Gecko/20100101 Firefox/128.0",
+		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:141.0) Gecko/20100101 Firefox/141.0",
+		"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0",
+		"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:141.0) Gecko/20100101 Firefox/141.0",
+		"Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0",
+		"Mozilla/5.0 (X11; Linux x86_64; rv:141.0) Gecko/20100101 Firefox/141.0",
+		"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0",
+		"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:141.0) Gecko/20100101 Firefox/141.0",
+		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Safari/605.1.15",
+		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"
+	];
+}
+
+function pickLegitimateUserAgent(): string {
+	static $userAgents = null;
+	if ($userAgents === null) {
+		$userAgents = getLegitimateUserAgents();
+	}
+
+	$key = array_rand($userAgents, 1);
+	return $userAgents[$key];
+}
+
+function pickRandomValue(array $values): mixed {
+	$key = array_rand($values, 1);
+	return $values[$key];
+}
+
+function getLegitimateAcceptHeaders(): array {
+	return [
+		'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+		'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+		'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+	];
+}
+
+function getLegitimateAcceptLanguageHeaders(): array {
+	return [
+		'en-US,en;q=0.9',
+		'en-GB,en;q=0.9',
+		'ro-RO,ro;q=0.9,en-US;q=0.8,en;q=0.7',
+		'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+		'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
+	];
+}
+
+function getLegitimatePlainReferers(): array {
+	return [
+		'https://www.facebook.com/',
+		'https://www.linkedin.com/',
+		'https://x.com/',
+		'https://www.reddit.com/',
+		'https://news.ycombinator.com/',
+		'https://www.youtube.com/',
+	];
+}
+
+function getSearchEngineReferers(string $keyword): array {
+	$encodedKeyword = rawurlencode($keyword);
+
+	return [
+		'https://www.google.com/search?q=' . $encodedKeyword,
+		'https://www.bing.com/search?q=' . $encodedKeyword,
+		'https://duckduckgo.com/?q=' . $encodedKeyword,
+		'https://search.yahoo.com/search?p=' . $encodedKeyword,
+	];
+}
+
+function getSearchKeywords(): array {
+	return [
+		'wordpress post views',
+		'wp postviews analytics',
+		'how to filter bot traffic',
+		'wordpress plugin bot detection',
+		'article statistics wordpress',
+		'alexboia.net wordpress',
+	];
+}
+
+function getCloudflareRequestMetadata(): array {
+	return [
+		['country' => 'RO', 'asnName' => 'RCS & RDS SA'],
+		['country' => 'US', 'asnName' => 'Comcast Cable Communications LLC'],
+		['country' => 'GB', 'asnName' => 'British Telecommunications PLC'],
+		['country' => 'DE', 'asnName' => 'Deutsche Telekom AG'],
+		['country' => 'FR', 'asnName' => 'Orange S.A.'],
+		['country' => 'NL', 'asnName' => 'KPN B.V.'],
+		['country' => 'ES', 'asnName' => 'Telefonica de Espana'],
+	];
+}
+
+function buildLegitimateHeaders(): array {
+	$headers = [
+		'Accept: ' . pickRandomValue(getLegitimateAcceptHeaders()),
+		'Accept-Language: ' . pickRandomValue(getLegitimateAcceptLanguageHeaders()),
+	];
+
+	if (random_int(1, 100) <= 35) {
+		$metadata = pickRandomValue(getCloudflareRequestMetadata());
+		$headers[] = 'CF-IPCountry: ' . $metadata['country'];
+		$headers[] = 'CF-Asn-Name: ' . $metadata['asnName'];
+	}
+
+	return $headers;
+}
+
+function buildLegitimateReferer(): string {
+	$mode = random_int(1, 100);
+
+	if ($mode <= 35) {
+		return '';
+	}
+
+	if ($mode <= 65) {
+		return pickRandomValue(getLegitimatePlainReferers());
+	}
+
+	$keyword = pickRandomValue(getSearchKeywords());
+	return pickRandomValue(getSearchEngineReferers($keyword));
 }
 
 function normalizeStringList(array $items): array {
@@ -140,12 +273,18 @@ function normalizeRefererToUrl(string $value): string {
 	return 'https://' . ltrim($value, '/');
 }
 
-function makeRequest(string $url, string $userAgent, string $referer = ''): array {
+function makeRequest(string $url, string $userAgent, string $referer = '', array $extraHeaders = []): array {
 	$ch = curl_init();
 	$headers = [];
 
 	if ($referer !== '') {
 		$headers[] = 'Referer: ' . $referer;
+	}
+
+	foreach ($extraHeaders as $header) {
+		if (is_string($header) && trim($header) !== '') {
+			$headers[] = trim($header);
+		}
 	}
 
 	curl_setopt_array($ch, [
@@ -184,6 +323,7 @@ function buildScenarios(array $bots, array $referers): array {
 			'label' => $botUserAgent,
 			'userAgent' => $botUserAgent,
 			'referer' => '',
+			'headers' => [],
 		];
 	}
 
@@ -198,6 +338,28 @@ function buildScenarios(array $bots, array $referers): array {
 			'label' => $refererValue,
 			'userAgent' => BROWSER_USER_AGENT,
 			'referer' => $normalizedReferer,
+			'headers' => [],
+		];
+	}
+
+	return $scenarios;
+}
+
+function buildLegitimateScenarios(int $count): array {
+	$scenarios = [];
+
+	for ($i = 0; $i < $count; $i++) {
+		$referer = buildLegitimateReferer();
+		$label = $referer !== ''
+			? 'Browser request with referer'
+			: 'Direct browser request';
+
+		$scenarios[] = [
+			'type' => 'LEGIT',
+			'label' => $label,
+			'userAgent' => pickLegitimateUserAgent(),
+			'referer' => $referer,
+			'headers' => buildLegitimateHeaders(),
 		];
 	}
 
@@ -230,6 +392,14 @@ function displayRunningScenarioInfo(array $scenario, int $current, int $total): 
 		echo colorText("  Referer header: {$scenario['referer']}\n", ANSI_BLUE);
 	}
 	echo colorText("  User-Agent: {$scenario['userAgent']}\n", ANSI_BLUE);
+
+	$headers = isset($scenario['headers']) && is_array($scenario['headers'])
+		? $scenario['headers']
+		: [];
+
+	foreach ($headers as $header) {
+		echo colorText("  Header: {$header}\n", ANSI_BLUE);
+	}
 }
 
 function displayBanner(string $targetUrl, int $uaCount, int $refererCount, int $total): void {
@@ -255,8 +425,10 @@ if (empty($args)) {
 
 $url = '';
 $limit = 0;
+$limitSpecified = false;
 $autoBatch = false;
 $noDelay = false;
+$legitRequests = false;
 
 foreach ($args as $arg) {
 	if (strpos($arg, LIMIT_ARG_PREFIX) === 0) {
@@ -264,6 +436,7 @@ foreach ($args as $arg) {
 			strlen(LIMIT_ARG_PREFIX));
 
 		$limit = max(0, (int)$limitValue);
+		$limitSpecified = true;
 		continue;
 	}
 
@@ -274,6 +447,11 @@ foreach ($args as $arg) {
 
 	if (strpos($arg, NO_DELAY_ARG_PREFIX) === 0) {
 		$noDelay = true;
+		continue;
+	}
+
+	if ($arg === LEGIT_REQUESTS_ARG) {
+		$legitRequests = true;
 		continue;
 	}
 
@@ -293,19 +471,30 @@ if (!function_exists('curl_init')) {
 	exit(1);
 }
 
-$sources = readBotsAndReferers(BOTS_FILE_PATH);
-$bots = $sources['bots'];
-$referers = $sources['referers'];
+$bots = [];
+$referers = [];
 
-$scenarios = buildScenarios($bots, $referers);
+if (!$legitRequests) {
+	$sources = readBotsAndReferers(BOTS_FILE_PATH);
+	$bots = $sources['bots'];
+	$referers = $sources['referers'];
+
+	$scenarios = buildScenarios($bots, $referers);
+
+	if ($limit > 0) {
+		$scenarios = array_slice($scenarios, 0, $limit);
+	}
+} else {
+	$legitRequestsCount = $limitSpecified && $limit > 0
+		? $limit
+		: DEFAULT_LEGIT_REQUEST_LIMIT;
+
+	$scenarios = buildLegitimateScenarios($legitRequestsCount);	
+}
 
 if (empty($scenarios)) {
 	displayError("No scenarios available to test.\n");
 	exit(1);
-}
-
-if ($limit > 0) {
-	$scenarios = array_slice($scenarios, 0, $limit);
 }
 
 $total = count($scenarios);
@@ -325,7 +514,10 @@ foreach ($scenarios as $index => $scenario) {
 
 	$result = makeRequest($url, 
 		$scenario['userAgent'], 
-		$scenario['referer']);
+		$scenario['referer'],
+		isset($scenario['headers']) && is_array($scenario['headers'])
+			? $scenario['headers']
+			: []);
 
 	if ($result['error'] !== '') {
 		$errorCount++;

@@ -3,7 +3,7 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
-define('ABNET_WP_POST_VIEWS_VERSION', '1.1');
+define('ABNET_WP_POST_VIEWS_VERSION', '1.3');
 define('ABNET_WP_POST_VIEWS_INC_DIR', __DIR__ . '/includes/');
 define('ABNET_WP_POST_VIEWS_VIEWS_FILES_DIR', __DIR__ . '/views/');
 define('ABNET_WP_POST_VIEWS_DATA_DIR', __DIR__ . '/data/');

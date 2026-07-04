@@ -71,7 +71,8 @@ namespace ABNetWpPostViewsAddons {
 			));
 
 			if (!$columnExists) {
-				$wpdb->query("ALTER TABLE {$tableName} ADD COLUMN {$columnName} {$definition}");
+				$result = $wpdb->query("ALTER TABLE {$tableName} ADD COLUMN {$columnName} {$definition}");
+				self::logLastDbError();
 			}
 		}
 
