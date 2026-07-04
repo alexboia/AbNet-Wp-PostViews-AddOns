@@ -236,7 +236,7 @@ namespace ABNetWpPostViewsAddons {
 			if ($cfIpCountry === 'RO') {
 				$score -= 5;
 			}
-			
+
 			$networkName = trim(implode(' ', array_filter(array(
 				$visitInfo->getCfIpAsName(),
 				$visitInfo->getComputedNetworkName(),

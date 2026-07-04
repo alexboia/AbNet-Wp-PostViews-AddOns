@@ -151,6 +151,7 @@ namespace ABNetWpPostViewsAddons {
 
 				$autoFlagScoreThreshold = $this->_flagBotIfFuzzyScoreMoreThan();
 				if (!$context->isBot() && $context->getFuzzyBotScore() >= $autoFlagScoreThreshold) {
+					abnet_write_log("Request {$userAgentDesc}/{$refererDesc} has fuzzy boy score above trheshold ({$context->getFuzzyBotScore()}).");	
 					$context->flagBot();
 				}
 
