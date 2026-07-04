@@ -228,7 +228,8 @@
         "axios",
         "Python",
         "aiohttp",
-        "Cursor"
+        "Cursor",
+        "WPMU DEV Broken Link Checker Local Engine"
     ],
     "referers": [
         "l.whatsapp.com",
