@@ -8,8 +8,8 @@
 ## Features
 
 - Extends [WP-PostViews](https://github.com/lesterchan/wp-postviews) through its native `postviews_should_count` filter;
-- Blocks requests by User-Agent patterns from `data/bots.json` (`bots` section);
-- Blocks requests by Referer patterns from `data/bots.json` (`referers` section);
+- Blocks view count for requests by User-Agent patterns from `data/bots.json` (`bots` section);
+- Blocks view count for requests by Referer patterns from `data/bots.json` (`referers` section);
 - Supports strict referer-domain matching (exact domain or subdomain only);
 - Includes a Tools page for updating the local bots list from [ai-robots-txt](https://github.com/ai-robots-txt/ai.robots.txt);
 - Supports fallback to the last downloaded source when remote download fails;
