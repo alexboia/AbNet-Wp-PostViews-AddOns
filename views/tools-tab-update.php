@@ -1,4 +1,6 @@
 <?php
+	use ABNetWpPostViewsAddons\RefererPatternUpdater;
+
 	if (!defined('ABSPATH')) {
 		exit;
 	}
@@ -18,13 +20,13 @@
 	<div class="notice notice-info inline is-dismissible"><p><?php echo esc_html( $lastSuccessfulUpdateMessage ); ?></p></div>
 <?php endif; ?>
 
-<?php if ( $status === ABNet_WP_Post_Views_Addons_RefererPatternUpdater::STATUS_UPDATED ) : ?>
+<?php if ( $status === RefererPatternUpdater::STATUS_UPDATED ) : ?>
 	<div class="notice notice-success inline is-dismissible"><p><?php echo esc_html__( 'Bots list was updated successfully.', 'abnet-wp-post-views-addons' ); ?></p></div>
-<?php elseif ( $status === ABNet_WP_Post_Views_Addons_RefererPatternUpdater::STATUS_NO_CHANGES ) : ?>
+<?php elseif ( $status === RefererPatternUpdater::STATUS_NO_CHANGES ) : ?>
 	<div class="notice notice-info inline is-dismissible"><p><?php echo esc_html__( 'No new bot entries were found.', 'abnet-wp-post-views-addons' ); ?></p></div>
-<?php elseif ( $status === ABNet_WP_Post_Views_Addons_RefererPatternUpdater::STATUS_NO_SOURCE ) : ?>
+<?php elseif ( $status === RefererPatternUpdater::STATUS_NO_SOURCE ) : ?>
 	<div class="notice notice-error inline is-dismissible"><p><?php echo esc_html__( 'Could not download source file and no fallback source was available.', 'abnet-wp-post-views-addons' ); ?></p></div>
-<?php elseif ( $status === ABNet_WP_Post_Views_Addons_RefererPatternUpdater::STATUS_NO_BOTS ) : ?>
+<?php elseif ( $status === RefererPatternUpdater::STATUS_NO_BOTS ) : ?>
 	<div class="notice notice-warning inline is-dismissible"><p><?php echo esc_html__( 'Source file does not contain bot entries in the expected format.', 'abnet-wp-post-views-addons' ); ?></p></div>
 <?php endif; ?>
 

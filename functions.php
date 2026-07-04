@@ -5,6 +5,13 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
+function abnet_wp_post_views_addons_init_autoload() {
+	require_once ABNET_WP_POST_VIEWS_INC_DIR . 'Autoloader.php';
+	\ABNetWpPostViewsAddons\Autoloader::init([
+		'ABNetWpPostViewsAddons' => ABNET_WP_POST_VIEWS_INC_DIR,
+	]);
+}
+
 if (!function_exists('abnet_wp_post_views_addons_tracking_enabled')) {
 	function abnet_wp_post_views_addons_tracking_enabled(): bool {
 		return defined('ABNET_WP_POST_VIEWS_TRACKING_ENABLED')
@@ -34,8 +41,8 @@ if (!function_exists('abnet_wp_post_views_addons_read_bots_json')) {
 	 * @param string $pluginFile
 	 * @return array|null
 	 */
-	function abnet_wp_post_views_addons_read_bots_json(string $pluginFile): ?array {
-		$jsonPath = plugin_dir_path( $pluginFile ) . 'data' . DIRECTORY_SEPARATOR . 'bots.json';
+	function abnet_wp_post_views_addons_read_bots_json(): ?array {
+		$jsonPath = ABNET_WP_POST_VIEWS_DATA_DIR . DIRECTORY_SEPARATOR . 'bots.json';
 
 		if (!file_exists($jsonPath) || !is_readable($jsonPath)) {
 			return null;
@@ -76,4 +83,9 @@ if (!function_exists('abnet_write_throwable')) {
 			$throwable->getLine()
 		));
 	}
+}
+
+function abnet_wp_post_views_addons_run() {
+	abnet_wp_post_views_addons_init_autoload();	
+	\ABNetWpPostViewsAddons\Plugin::getInstance()->run();
 }

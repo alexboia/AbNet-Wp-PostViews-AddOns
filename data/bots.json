@@ -223,16 +223,12 @@
         "YouBot",
         "ZanistaBot",
         "GuzzleHttp",
-        "curl",
-        "Wget",
         "Java",
-        "Go-http-client",
         "got",
         "axios",
         "Python",
         "aiohttp",
-        "python-requests",
-        "Scrapy"
+        "Cursor"
     ],
     "referers": [
         "l.whatsapp.com",
@@ -242,7 +238,5 @@
         "l.instagram.com",
         "out.reddit.com"
     ],
-    "spamReferers": [
-        
-    ]
+    "spamReferers": []
 }
