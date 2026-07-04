@@ -34,6 +34,44 @@ final class ABNet_WP_Post_Views_Addons_Db {
 
 	private static function _migrateVisitInfoTable(): void {
 		self::_createVisitInfoTable();
+		self::_migrateVisitInfoColumns();
+	}
+
+	private static function _migrateVisitInfoColumns(): void {
+		$columns = array(
+			'accept_content' => 'VARCHAR(255) NULL',
+			'cf_ip_country' => 'VARCHAR(8) NULL',
+			'cf_ip_as_name' => 'VARCHAR(255) NULL',
+			'computed_country' => 'VARCHAR(8) NULL',
+			'computed_asn' => 'VARCHAR(64) NULL',
+			'computed_network_name' => 'VARCHAR(255) NULL',
+			'fuzzy_bot_score' => "INT(11) NOT NULL DEFAULT '0'",
+			'was_processed' => "TINYINT(1) NOT NULL DEFAULT '0'",
+			'was_discarded' => "TINYINT(1) NOT NULL DEFAULT '0'",
+		);
+
+		foreach ($columns as $columnName => $definition) {
+			self::_ensureColumn($columnName, $definition);
+		}
+	}
+
+	private static function _ensureColumn(string $columnName, string $definition): void {
+		/**
+		 * @var \wpdb $wpdb
+		 */
+		global $wpdb;
+
+		$tableName = self::getVisitInfoTableName();
+		$columnExists = $wpdb->get_var($wpdb->prepare(
+			'SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s AND COLUMN_NAME = %s',
+			DB_NAME,
+			$tableName,
+			$columnName
+		));
+
+		if (!$columnExists) {
+			$wpdb->query("ALTER TABLE {$tableName} ADD COLUMN {$columnName} {$definition}");
+		}
 	}
 
 	private static function _createVisitInfoTable(): void {
@@ -67,7 +105,16 @@ final class ABNet_WP_Post_Views_Addons_Db {
 			utm_campaign VARCHAR(255) NULL,
 			utm_term VARCHAR(255) NULL,
 			utm_content VARCHAR(255) NULL,
+			accept_content VARCHAR(255) NULL,
+			cf_ip_country VARCHAR(8) NULL,
+			cf_ip_as_name VARCHAR(255) NULL,
+			computed_country VARCHAR(8) NULL,
+			computed_asn VARCHAR(64) NULL,
+			computed_network_name VARCHAR(255) NULL,
+			fuzzy_bot_score INT(11) NOT NULL DEFAULT '0',
 			was_counted TINYINT(1) NOT NULL DEFAULT '0',
+			was_processed TINYINT(1) NOT NULL DEFAULT '0',
+			was_discarded TINYINT(1) NOT NULL DEFAULT '0',
 			PRIMARY KEY (visit_id),
 			KEY key_post_id (post_id),
 			KEY key_visit_timestamp (visit_language)

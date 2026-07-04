@@ -48,6 +48,24 @@ final class ABNet_WP_Post_Views_Addons_VisitInfo {
 
 	public const string KEY_UTM_CONTENT = 'utm_content';
 
+	public const string KEY_ACCEPT_CONTENT = 'accept_content';
+
+	public const string KEY_CF_IP_COUNTRY = 'cf_ip_country';
+
+	public const string KEY_CF_IP_AS_NAME = 'cf_ip_as_name';
+
+	public const string KEY_COMPUTED_COUNTRY = 'computed_country';
+
+	public const string KEY_COMPUTED_ASN = 'computed_asn';
+
+	public const string KEY_COMPUTED_NETWORK_NAME = 'computed_network_name';
+
+	public const string KEY_FUZZY_BOT_SCORE = 'fuzzy_bot_score';
+
+	public const string KEY_WAS_PROCESSED = 'was_processed';
+
+	public const string KEY_WAS_DISCARDED = 'was_discarded';
+
 	public const string KEY_WAS_COUNTED = 'was_counted';
 
 	private int|null $_visitId;
@@ -92,7 +110,25 @@ final class ABNet_WP_Post_Views_Addons_VisitInfo {
 
 	private string|null $_utmContent;
 
+	private string|null $_acceptContent;
+
+	private string|null $_cfIpCountry;
+
+	private string|null $_cfIpAsName;
+
+	private string|null $_computedCountry;
+
+	private string|null $_computedAsn;
+
+	private string|null $_computedNetworkName;
+
+	private int $_fuzzyBotScore;
+
 	private bool $_wasCounted;
+
+	private bool $_wasProcessed;
+
+	private bool $_wasDiscarded;
 
 	public function __construct(array $info){
 		$this->_visitId = isset($info[self::KEY_VISIT_ID]) 
@@ -149,7 +185,37 @@ final class ABNet_WP_Post_Views_Addons_VisitInfo {
 			? (string)$info[self::KEY_UTM_CONTENT]
 			: null;
 
+		$this->_acceptContent = isset($info[self::KEY_ACCEPT_CONTENT])
+			? (string)$info[self::KEY_ACCEPT_CONTENT]
+			: null;
+
+		$this->_cfIpCountry = isset($info[self::KEY_CF_IP_COUNTRY])
+			? (string)$info[self::KEY_CF_IP_COUNTRY]
+			: null;
+
+		$this->_cfIpAsName = isset($info[self::KEY_CF_IP_AS_NAME])
+			? (string)$info[self::KEY_CF_IP_AS_NAME]
+			: null;
+
+		$this->_computedCountry = isset($info[self::KEY_COMPUTED_COUNTRY])
+			? (string)$info[self::KEY_COMPUTED_COUNTRY]
+			: null;
+
+		$this->_computedAsn = isset($info[self::KEY_COMPUTED_ASN])
+			? (string)$info[self::KEY_COMPUTED_ASN]
+			: null;
+
+		$this->_computedNetworkName = isset($info[self::KEY_COMPUTED_NETWORK_NAME])
+			? (string)$info[self::KEY_COMPUTED_NETWORK_NAME]
+			: null;
+
+		$this->_fuzzyBotScore = isset($info[self::KEY_FUZZY_BOT_SCORE])
+			? (int)$info[self::KEY_FUZZY_BOT_SCORE]
+			: 0;
+
 		$this->_wasCounted =(bool)($info[self::KEY_WAS_COUNTED] ?? false);
+		$this->_wasProcessed = (bool)($info[self::KEY_WAS_PROCESSED] ?? false);
+		$this->_wasDiscarded = (bool)($info[self::KEY_WAS_DISCARDED] ?? false);
 	}
 
 	public static function fromDbArray(array $data): self {
@@ -163,6 +229,10 @@ final class ABNet_WP_Post_Views_Addons_VisitInfo {
 			&& intval($data[self::KEY_IS_SPAM_REFERER]) === 1;
 		$data[self::KEY_WAS_COUNTED] = !empty($data[self::KEY_WAS_COUNTED])
 			&& intval($data[self::KEY_WAS_COUNTED]) === 1;
+		$data[self::KEY_WAS_PROCESSED] = !empty($data[self::KEY_WAS_PROCESSED])
+			&& intval($data[self::KEY_WAS_PROCESSED]) === 1;
+		$data[self::KEY_WAS_DISCARDED] = !empty($data[self::KEY_WAS_DISCARDED])
+			&& intval($data[self::KEY_WAS_DISCARDED]) === 1;
 
 		return new self($data);
 	}
@@ -190,7 +260,17 @@ final class ABNet_WP_Post_Views_Addons_VisitInfo {
 			self::KEY_UTM_CAMPAIGN => $this->_utmCampaign,
 			self::KEY_UTM_TERM => $this->_utmTerm,
 			self::KEY_UTM_CONTENT => $this->_utmContent,
+			self::KEY_ACCEPT_CONTENT => $this->_acceptContent,
+			self::KEY_CF_IP_COUNTRY => $this->_cfIpCountry,
+			self::KEY_CF_IP_AS_NAME => $this->_cfIpAsName,
+			self::KEY_COMPUTED_COUNTRY => $this->_computedCountry,
+			self::KEY_COMPUTED_ASN => $this->_computedAsn,
+			self::KEY_COMPUTED_NETWORK_NAME => $this->_computedNetworkName,
+			self::KEY_FUZZY_BOT_SCORE => $this->_fuzzyBotScore,
 			self::KEY_WAS_COUNTED => $this->_wasCounted
+			,
+			self::KEY_WAS_PROCESSED => $this->_wasProcessed,
+			self::KEY_WAS_DISCARDED => $this->_wasDiscarded
 		];
 	}
 
@@ -202,6 +282,8 @@ final class ABNet_WP_Post_Views_Addons_VisitInfo {
 		$data[self::KEY_IS_FILTERED_REFERER] = $data[self::KEY_IS_FILTERED_REFERER] ? 1 : 0;
 		$data[self::KEY_IS_SPAM_REFERER] = $data[self::KEY_IS_SPAM_REFERER] ? 1 : 0;
 		$data[self::KEY_WAS_COUNTED] = $data[self::KEY_WAS_COUNTED] ? 1 : 0;
+		$data[self::KEY_WAS_PROCESSED] = $data[self::KEY_WAS_PROCESSED] ? 1 : 0;
+		$data[self::KEY_WAS_DISCARDED] = $data[self::KEY_WAS_DISCARDED] ? 1 : 0;
 
 		return $data;
 	}
@@ -292,5 +374,41 @@ final class ABNet_WP_Post_Views_Addons_VisitInfo {
 
 	public function wasCounted(): bool {
 		return $this->_wasCounted;
+	}
+
+	public function wasProcessed(): bool {
+		return $this->_wasProcessed;
+	}
+
+	public function wasDiscarded(): bool {
+		return $this->_wasDiscarded;
+	}
+
+	public function getAcceptContent(): string|null {
+		return $this->_acceptContent;
+	}
+
+	public function getCfIpCountry(): string|null {
+		return $this->_cfIpCountry;
+	}
+
+	public function getCfIpAsName(): string|null {
+		return $this->_cfIpAsName;
+	}
+
+	public function getComputedCountry(): string|null {
+		return $this->_computedCountry;
+	}
+
+	public function getComputedAsn(): string|null {
+		return $this->_computedAsn;
+	}
+
+	public function getComputedNetworkName(): string|null {
+		return $this->_computedNetworkName;
+	}
+
+	public function getFuzzyBotScore(): int {
+		return $this->_fuzzyBotScore;
 	}
 }

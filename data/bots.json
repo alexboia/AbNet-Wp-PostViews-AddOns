@@ -221,7 +221,18 @@
         "YandexAdditional",
         "YandexAdditionalBot",
         "YouBot",
-        "ZanistaBot"
+        "ZanistaBot",
+        "GuzzleHttp",
+        "curl",
+        "Wget",
+        "Java",
+        "Go-http-client",
+        "got",
+        "axios",
+        "Python",
+        "aiohttp",
+        "python-requests",
+        "Scrapy"
     ],
     "referers": [
         "l.whatsapp.com",

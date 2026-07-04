@@ -19,7 +19,6 @@ final class ABNet_WP_Post_Views_Addons_VisitInfoCollector {
 
 	public function collectVisitInfo(ABNet_WP_Post_Views_Addons_VisitContext $context): ABNet_WP_Post_Views_Addons_VisitInfo {
 		$data = array();
-
 		$data[ABNet_WP_Post_Views_Addons_VisitInfo::KEY_VISIT_ID] = 0;
 
 		$data[ABNet_WP_Post_Views_Addons_VisitInfo::KEY_POST_ID] = 
@@ -44,6 +43,13 @@ final class ABNet_WP_Post_Views_Addons_VisitInfoCollector {
 			$this->_getProtocol();
 		$data[ABNet_WP_Post_Views_Addons_VisitInfo::KEY_LANGUAGE] =
 			$this->_getAcceptLanguage();
+		$data[ABNet_WP_Post_Views_Addons_VisitInfo::KEY_ACCEPT_CONTENT] =
+			$this->_getAcceptContent();
+
+		$data[ABNet_WP_Post_Views_Addons_VisitInfo::KEY_CF_IP_COUNTRY] =
+			$this->_getCfIpCountry();
+		$data[ABNet_WP_Post_Views_Addons_VisitInfo::KEY_CF_IP_AS_NAME] =
+			$this->_getCfIpAsName();
 
 		$data[ABNet_WP_Post_Views_Addons_VisitInfo::KEY_IS_BOT] = 
 			$context->isBot();
@@ -359,6 +365,24 @@ final class ABNet_WP_Post_Views_Addons_VisitInfoCollector {
 
 		return !empty($language)
 			? $language
+			: null;
+	}
+
+	private function _getAcceptContent(): string|null {
+		return !empty($_SERVER['HTTP_ACCEPT'])
+			? sanitize_text_field($_SERVER['HTTP_ACCEPT'])
+			: null;
+	}
+
+	private function _getCfIpCountry(): string|null {
+		return !empty($_SERVER['HTTP_CF_IPCOUNTRY'])
+			? sanitize_text_field($_SERVER['HTTP_CF_IPCOUNTRY'])
+			: null;
+	}
+
+	private function _getCfIpAsName(): string|null {
+		return !empty($_SERVER['HTTP_CF_IPAS_NAME'])
+			? sanitize_text_field($_SERVER['HTTP_CF_IPAS_NAME'])
 			: null;
 	}
 }

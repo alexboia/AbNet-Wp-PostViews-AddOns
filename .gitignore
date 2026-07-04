@@ -8,3 +8,4 @@ build
 dist
 docs/plugin.md
 docs/package-plugin.md
+*.mmdb
