@@ -248,8 +248,7 @@ namespace ABNetWpPostViewsAddons {
 		 * @return string
 		 */
 		private function _determineLastDownloadedDirectoryPath(): string {
-			return plugin_dir_path($this->_pluginFile) 
-				. 'data' . DIRECTORY_SEPARATOR 
+			return ABNET_WP_POST_VIEWS_DATA_DIR . DIRECTORY_SEPARATOR 
 				. 'last-downloaded-sources' . DIRECTORY_SEPARATOR 
 				. 'ai-robots-txt';
 		}
@@ -265,8 +264,7 @@ namespace ABNetWpPostViewsAddons {
 		 * @return string
 		 */
 		private function _determineJsonPath() {
-			return plugin_dir_path($this->_pluginFile) 
-				. 'data' . DIRECTORY_SEPARATOR 
+			return ABNET_WP_POST_VIEWS_DATA_DIR . DIRECTORY_SEPARATOR 
 				. 'bots.json';
 		}
 	}
