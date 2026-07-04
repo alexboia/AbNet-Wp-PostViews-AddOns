@@ -290,6 +290,19 @@ namespace ABNetWpPostViewsAddons {
 			return $data;
 		}
 
+		public function updateFromVisitContext(VisitContext $context): VisitInfo {
+			$data = $this->toArray();
+
+			$data[self::KEY_POST_ID] = $context->getCurrentPostId();
+			$data[self::KEY_IS_BOT] = $context->isBot();
+			$data[self::KEY_IS_FILTERED_REFERER] = $context->isFilteredReferer();
+			$data[self::KEY_IS_SPAM_REFERER] = $context->isSpamReferer();
+			$data[self::KEY_WAS_COUNTED] = $context->wasCounted();
+			$data[self::KEY_FUZZY_BOT_SCORE] = $context->getFuzzyBotScore();
+
+			return new self($data);
+		}
+
 		public function getVisitId(): int|null {
 			return $this->_visitId;
 		}

@@ -117,6 +117,49 @@ add_filter('abnet_wpv_addons_last_update_message', function(
 }, 10, 3);
 ```
 
+### `abnet_wpv_addons_fuzzy_bot_score`
+
+Filters the computed bot probability score saved with each tracked visit.
+
+- Input:
+  - `ABNetWpPostViewsAddons\FuzzyBotScore $score`
+  - `ABNetWpPostViewsAddons\VisitInfo $visitInfo`
+- Output: `ABNetWpPostViewsAddons\FuzzyBotScore`
+
+```php
+add_filter('abnet_wpv_addons_fuzzy_bot_score', function(
+	ABNetWpPostViewsAddons\FuzzyBotScore $score,
+	ABNetWpPostViewsAddons\VisitInfo $visitInfo
+): ABNetWpPostViewsAddons\FuzzyBotScore {
+	if ($visitInfo->getCfIpCountry() === 'RO') {
+		return new ABNetWpPostViewsAddons\FuzzyBotScore(
+			$score->getScore() - 5,
+			$score->getSignals()
+		);
+	}
+
+	return $score;
+}, 10, 2);
+```
+
+## Fuzzy Bot Score
+
+Tracked visits include a `fuzzy_bot_score` value from `0` to `100`, estimating how likely the request is to be automated after deterministic `bots.json` matching has already happened. The calculator returns a `FuzzyBotScore` object containing both the normalized score and the contributing signal map.
+
+The fuzzy score is based only on `VisitInfo` fields, not on the already-computed bot/referer matching flags. It uses softer request-shape signals such as user-agent structure, missing or weak `Accept`, missing `Accept-Language`, suspicious network names, unusual request methods, no cookies, protocol hints, referer shape, search terms, and UTM parameters. Normal browser signals, local referers, search referers, HTTP/2 or HTTP/3, rich browser `Accept` headers, and campaign-tagged visits can reduce the score slightly.
+
+Current signals include:
+
+- suspicious or missing User-Agent values, including malformed Safari-like strings, old Chrome versions, and abandoned Windows desktop masks;
+- missing, wildcard, or non-HTML `Accept` headers;
+- missing `Accept-Language`;
+- request methods other than `GET` or `HEAD`;
+- protocol hints such as `HTTP/1.0`, `HTTP/2`, and `HTTP/3`;
+- missing, local, or search referers;
+- missing cookies;
+- search and UTM campaign hints;
+- invalid Cloudflare country metadata and suspicious hosting/cloud network names.
+
 ## `bots.json` Structure
 
 The plugin reads `data/bots.json`. Typical structure:

@@ -23,6 +23,8 @@ namespace ABNetWpPostViewsAddons {
 
 		private bool $_wasCounted = false;
 
+		private int $_fuzzyBotScore = 0;
+
 		/**
 		 * @return VisitContext
 		 */
@@ -95,7 +97,7 @@ namespace ABNetWpPostViewsAddons {
 			}
 
 			/**
-			 * @var WP_Post $post
+			 * @var \WP_Post $post
 			 */
 
 			global $post;
@@ -115,6 +117,19 @@ namespace ABNetWpPostViewsAddons {
 
 		public function wasCounted(): bool {
 			return $this->_wasCounted;
+		}
+
+		public function setFuzzyBotScore(int $score): void {
+			$this->_fuzzyBotScore = min(100, max(0, $score));
+		}
+
+		public function incrementFuzzyBotScore(int $byAmount): void {
+			$score = $this->getFuzzyBotScore() + $byAmount;
+			$this->setFuzzyBotScore($score);
+		}
+
+		public function getFuzzyBotScore(): int {
+			return $this->_fuzzyBotScore;
 		}
 	}
 }

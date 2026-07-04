@@ -96,11 +96,9 @@ namespace ABNetWpPostViewsAddons {
 			$botExclusionEnabled = $this->_isWpPostviewsBotExclusionEnabled();
 			$context = VisitContext::getInstance();
 
-			if ($trackingEnabled || $botExclusionEnabled) {
-				$this->_evaluatePostVisit($context);
-			}
-
 			$countView = $shouldCount;
+			$visitInfo = $this->_evaluatePostVisit($context);
+
 			if ($botExclusionEnabled) {
 				$countView = $countView 
 					&& !$context->isBot() 
@@ -113,20 +111,24 @@ namespace ABNetWpPostViewsAddons {
 			}
 
 			if ($trackingEnabled) {
-				$this->_trackPostView($context);
+				$this->_processPostVisit($visitInfo);
 			}
 
 			return $countView;
 		}
 
-		private function _evaluatePostVisit(VisitContext $context) {
+		private function _evaluatePostVisit(VisitContext $context): VisitInfo {
+			$collector = new VisitInfoCollector();
+			$calculator = new FuzzyBotScoreCalculator();
+
 			$strictMode = $this->_isStrictMode();
-			
+			$visitInfo = $collector->collectVisitInfo($context);
+
 			abnet_write_log(sprintf("Strict mode: %s.", 
 				$strictMode ? "Yes" : "No"));
 
-			$userAgent = $this->_determineUserAgent();
-			$referer = $this->_determineReferer();
+			$userAgent = $visitInfo->getUserAgent();
+			$referer = $visitInfo->getReferer();
 
 			$userAgentDesc = !empty($userAgent) ? $userAgent : "<NO USER AGENT>";
 			$refererDesc = !empty($referer) ? $referer : "<NO REFERER>";
@@ -140,14 +142,22 @@ namespace ABNetWpPostViewsAddons {
 				abnet_write_log("Request {$userAgentDesc}/{$refererDesc} matches referer patterns.");	
 				$context->flagFilteredReferer();
 			}
+
+			$fuzzyBotScore = $calculator->calculate($visitInfo);
+			$fuzzyBotScore = $this->_filterFuzzyBotScoreScore($fuzzyBotScore, $visitInfo);
+			$context->setFuzzyBotScore($fuzzyBotScore->getScore());
+			
+			if (!$context->isBot() && $context->getFuzzyBotScore() >= 75) {
+				$context->flagBot();
+			}
+			
+			$visitInfo = $visitInfo->updateFromVisitContext($context);
+			return $visitInfo;
 		}
 
-		private function _trackPostView(VisitContext $context) {
+		private function _processPostVisit(VisitInfo $visitInfo) {
 			try {
-				$collector = new VisitInfoCollector();
-				$visitInfo = $collector->collectVisitInfo($context);
 				$result = $this->_dataSource->saveVisitInfo($visitInfo);
-
 				if (false === $result) {
 					Db::logLastDbError('Failed to save visit info');
 				}
@@ -156,16 +166,20 @@ namespace ABNetWpPostViewsAddons {
 			}
 		}
 
-		private function _determineUserAgent(): string {
-			return isset($_SERVER['HTTP_USER_AGENT']) 
-				? sanitize_text_field((string) $_SERVER['HTTP_USER_AGENT'] )
-				: '';
-		}
+		private function _filterFuzzyBotScoreScore(FuzzyBotScore $score, VisitInfo $visitInfo): FuzzyBotScore {
+			/**
+			 * Filters the computed fuzzy bot score.
+			 *
+			 * @param FuzzyBotScore $score Bot probability score, from 0 to 100.
+			 * @param VisitInfo $visitInfo Visit information used to compute the score.
+			 */
+			$filteredScore = apply_filters('abnet_wpv_addons_fuzzy_bot_score',
+				$score,
+				$visitInfo);
 
-		private function _determineReferer(): string {
-			return isset($_SERVER['HTTP_REFERER']) 
-				? sanitize_text_field((string) $_SERVER['HTTP_REFERER'] )
-				: '';
+			return $filteredScore instanceof FuzzyBotScore 
+				? $filteredScore 
+				: $score;
 		}
 
 		private function _matchesAnyBotPattern(string|null $value, array $patterns): bool {

@@ -60,6 +60,8 @@ namespace ABNetWpPostViewsAddons {
 				$context->isSpamReferer();
 			$data[VisitInfo::KEY_WAS_COUNTED] = 
 				$context->wasCounted();
+			$data[VisitInfo::KEY_FUZZY_BOT_SCORE] = 
+				$context->getFuzzyBotScore();
 
 			$data[VisitInfo::KEY_SEARCH_TERM] =
 				$this->_determineInboundSearchTerm();
@@ -382,8 +384,15 @@ namespace ABNetWpPostViewsAddons {
 		}
 
 		private function _getCfIpAsName(): string|null {
-			return !empty($_SERVER['HTTP_CF_ASN_NAME'])
-				? sanitize_text_field($_SERVER['HTTP_CF_ASN_NAME'])
+			$headerValue = null;
+			if (!empty($_SERVER['HTTP_CF_IPASNAME'])) {
+				$headerValue = $_SERVER['HTTP_CF_IPASNAME'];
+			} elseif (!empty($_SERVER['HTTP_CF_ASN_NAME'])) {
+				$headerValue = $_SERVER['HTTP_CF_ASN_NAME'];
+			}
+
+			return !empty($headerValue)
+				? sanitize_text_field((string)$headerValue)
 				: null;
 		}
 	}
