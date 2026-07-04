@@ -143,16 +143,20 @@ namespace ABNetWpPostViewsAddons {
 				$context->flagFilteredReferer();
 			}
 
-			$fuzzyBotScore = $calculator->calculate($visitInfo);
-			$fuzzyBotScore = $this->_filterFuzzyBotScoreScore($fuzzyBotScore, $visitInfo);
-			$context->setFuzzyBotScore($fuzzyBotScore->getScore());
-			
-			$autoFlagScoreThreshold = $this->_flagBotIfFuzzyScoreMoreThan();
-			if (!$context->isBot() && $context->getFuzzyBotScore() >= $autoFlagScoreThreshold) {
-				$context->flagBot();
-			}
-			
 			$visitInfo = $visitInfo->updateFromVisitContext($context);
+			if (!$context->isBot()) {
+				$fuzzyBotScore = $calculator->calculate($visitInfo);
+				$fuzzyBotScore = $this->_filterFuzzyBotScoreScore($fuzzyBotScore, $visitInfo);
+				$context->setFuzzyBotScore($fuzzyBotScore->getScore());
+
+				$autoFlagScoreThreshold = $this->_flagBotIfFuzzyScoreMoreThan();
+				if (!$context->isBot() && $context->getFuzzyBotScore() >= $autoFlagScoreThreshold) {
+					$context->flagBot();
+				}
+
+				$visitInfo = $visitInfo->updateFromVisitContext($context);
+			}
+
 			return $visitInfo;
 		}
 

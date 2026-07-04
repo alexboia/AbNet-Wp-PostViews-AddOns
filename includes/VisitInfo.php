@@ -178,7 +178,7 @@ namespace ABNetWpPostViewsAddons {
 			$this->_utmCampaign = isset($info[self::KEY_UTM_CAMPAIGN])
 				? (string)$info[self::KEY_UTM_CAMPAIGN]
 				: null;
-
+	
 			$this->_utmTerm = isset($info[self::KEY_UTM_TERM])
 				? (string)$info[self::KEY_UTM_TERM]
 				: null;

@@ -115,8 +115,9 @@ namespace ABNetWpPostViewsAddons {
 				return 45;
 			}
 
-			if (false !== stripos( $normalizedUserAgent, 'Windows NT 6.1' ) 
-				|| false !== stripos( $normalizedUserAgent, 'Windows NT 6.3' ) ) {
+			if (false !== stripos($normalizedUserAgent, 'Windows NT 6.1') 
+				|| false !== stripos($normalizedUserAgent, 'Windows NT 6.2') 
+				|| false !== stripos($normalizedUserAgent, 'Windows NT 6.3')) {
 				return 25;
 			}
 
