@@ -85,7 +85,8 @@ if (!function_exists('abnet_write_throwable')) {
 	}
 }
 
-function abnet_wp_post_views_addons_run() {
+function abnet_wp_post_views_addons_run(string $pluginFile) {
 	abnet_wp_post_views_addons_init_autoload();	
+	register_activation_hook($pluginFile, array(\ABNetWpPostViewsAddons\Plugin::class, 'activate'));
 	\ABNetWpPostViewsAddons\Plugin::getInstance()->run();
 }

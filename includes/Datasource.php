@@ -12,6 +12,10 @@ namespace ABNetWpPostViewsAddons {
 			return Db::getVisitInfoTableName();
 		}
 
+		private function _getHoneyTrappedBotsTableName(): string {
+			return Db::getHoneyTrappedBotsTableName();
+		}
+
 		public function saveVisitInfo(VisitInfo $visitInfo): int|false {
 			/**
 			 * @var \wpdb $wpdb
@@ -87,6 +91,28 @@ namespace ABNetWpPostViewsAddons {
 			}
 
 			return $visitInfos;
+		}
+
+		public function saveHoneyTrappedBot(HoneyTrappedBot $honeyTrappedBot): int {
+			/**
+			 * @var \wpdb $wpdb
+			 */
+			global $wpdb;
+
+			$data = $honeyTrappedBot->toDbArray();
+			if (!isset($data[HoneyTrappedBot::KEY_TRAPPED_BOT_ID])
+				|| (int)$data[HoneyTrappedBot::KEY_TRAPPED_BOT_ID] <= 0) {
+				unset($data[HoneyTrappedBot::KEY_TRAPPED_BOT_ID]);
+			}
+
+			$tableName = $this->_getHoneyTrappedBotsTableName();
+			$result = $wpdb->insert($tableName, $data);
+			if (false === $result) {
+				Db::logLastDbError('Failed to save honey trapped bot');
+				return 0;
+			}
+
+			return (int)$wpdb->insert_id;
 		}
 	}
 }

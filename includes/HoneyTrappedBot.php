@@ -108,11 +108,21 @@ namespace ABNetWpPostViewsAddons {
 
 		public static function fromDbArray(array $data): self {
 			if (is_string($data[self::KEY_SIGNATURE_PARTS])) {
-				$parts = json_decode($data[self::KEY_SIGNATURE_PARTS], true);
-				if (is_array($parts)) {
-					$data[self::KEY_SIGNATURE_PARTS] = $parts;
+				$signatureParts = json_decode($data[self::KEY_SIGNATURE_PARTS], true);
+				if (is_array($signatureParts)) {
+					$data[self::KEY_SIGNATURE_PARTS] = $signatureParts;
 				} else {
 					$data[self::KEY_SIGNATURE_PARTS] = array();
+				}
+			}
+
+
+			if (is_string($data[self::KEY_ALL_SIGNALS])) {
+				$signalsParts = json_decode($data[self::KEY_ALL_SIGNALS], true);
+				if (is_array($signalsParts)) {
+					$data[self::KEY_ALL_SIGNALS] = $signalsParts;
+				} else {
+					$data[self::KEY_ALL_SIGNALS] = array();
 				}
 			}
 
@@ -147,6 +157,7 @@ namespace ABNetWpPostViewsAddons {
 		public function toDbArray(): array {
 			$data = $this->toArray();
 			$data[self::KEY_SIGNATURE_PARTS] = json_encode($data[self::KEY_SIGNATURE_PARTS]);
+			$data[self::KEY_ALL_SIGNALS] = json_encode($data[self::KEY_ALL_SIGNALS]);
 			return $data;
 		}
 

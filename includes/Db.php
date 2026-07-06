@@ -15,8 +15,17 @@ namespace ABNetWpPostViewsAddons {
 			return $wpdb->prefix . 'abnet_wp_post_views_addons_visits';
 		}
 
+		public static function getHoneyTrappedBotsTableName(): string {
+			/**
+			 * @var \wpdb $wpdb
+			 */
+			global $wpdb;
+			return $wpdb->prefix . 'abnet_wp_post_views_addons_honeytrapped_bots';
+		}
+
 		public static function setup(): void {
 			self::_migrateVisitInfoTable();
+			self::_migrateHoneyTrappedBotsTable();
 		}
 
 		public static function logLastDbError(string $contextMessage = 'Database error'): void {
@@ -52,17 +61,23 @@ namespace ABNetWpPostViewsAddons {
 			);
 
 			foreach ($columns as $columnName => $definition) {
-				self::_ensureColumn($columnName, $definition);
+				self::_ensureVisitInfoColumn($columnName, 
+					$definition);
 			}
 		}
 
-		private static function _ensureColumn(string $columnName, string $definition): void {
+		private static function _ensureVisitInfoColumn(string $columnName, string $definition): void {
+			self::_ensureColumnForTable(self::getVisitInfoTableName(), 
+				$columnName, 
+				$definition);
+		}
+
+		private static function _ensureColumnForTable(string $tableName, string $columnName, string $definition): void {
 			/**
 			 * @var \wpdb $wpdb
 			 */
 			global $wpdb;
 
-			$tableName = self::getVisitInfoTableName();
 			$columnExists = $wpdb->get_var($wpdb->prepare(
 				'SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s AND COLUMN_NAME = %s',
 				DB_NAME,
@@ -120,6 +135,57 @@ namespace ABNetWpPostViewsAddons {
 				PRIMARY KEY (visit_id),
 				KEY key_post_id (post_id),
 				KEY key_visit_timestamp (visit_language)
+			) $charsetCollate;";
+
+			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+			dbDelta($sql);
+		}
+
+		private static function _migrateHoneyTrappedBotsTable(): void {
+			self::_createHoneyTrappedBotsTable();
+			self::_migrateHoneyTrappedBotsColumns();
+		}
+
+		private static function _migrateHoneyTrappedBotsColumns(): void {
+			$tableName = self::getHoneyTrappedBotsTableName();
+			$columns = array();
+
+			foreach ($columns as $columnName => $definition) {
+				self::_ensureColumnForTable($tableName, 
+					$columnName, 
+					$definition);
+			}
+		}
+
+		private static function _createHoneyTrappedBotsTable(): void {
+			/**
+			 * @var \wpdb $wpdb
+			 */
+			global $wpdb;
+
+			$tableName = self::getHoneyTrappedBotsTableName();
+			$charsetCollate = $wpdb->get_charset_collate();
+
+			$sql = "CREATE TABLE IF NOT EXISTS $tableName (
+				trapped_bot_id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+				ip_address VARCHAR(45) NOT NULL DEFAULT '',
+				referer TEXT NULL,
+				user_agent TEXT NULL,
+				request_method VARCHAR(16) NOT NULL DEFAULT 'GET',
+				accept_content VARCHAR(255) NULL,
+				protocol VARCHAR(16) NOT NULL DEFAULT 'HTTP',
+				language VARCHAR(64) NULL,
+				all_signals LONGTEXT NULL,
+				bot_signature VARCHAR(64) NOT NULL DEFAULT '',
+				signature_parts LONGTEXT NULL,
+				trap_url VARCHAR(2048) NOT NULL DEFAULT '',
+				trap_slug VARCHAR(255) NOT NULL DEFAULT '',
+				trap_identifier BIGINT(20) UNSIGNED NULL,
+				trap_type VARCHAR(128) NOT NULL DEFAULT '',
+				trapped_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+				PRIMARY KEY (trapped_bot_id),
+				KEY key_bot_signature (bot_signature),
+				KEY key_trapped_at (trapped_at)
 			) $charsetCollate;";
 
 			require_once ABSPATH . 'wp-admin/includes/upgrade.php';

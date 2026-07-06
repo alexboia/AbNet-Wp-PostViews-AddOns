@@ -8,10 +8,7 @@ namespace ABNetWpPostViewsAddons {
 	}
 
 	final class Plugin {
-		/**
-		 * @var Plugin|null
-		 */
-		private static $_instance = null;
+		private static Plugin|null $_instance = null;
 
 		/**
 		 * @var string[]|null
@@ -23,27 +20,19 @@ namespace ABNetWpPostViewsAddons {
 		 */
 		private $_refererPatterns = null;
 
-		/**
-		 * @var RefererPatternLoader|null
-		 */
-		private $_refererPatternLoader = null;
+		private RefererPatternLoader|null $_refererPatternLoader = null;
 
-		/**
-		 * @var ToolsIntegration|null
-		 */
-		private $_toolsIntegration = null;
+		private ToolsIntegration|null $_toolsIntegration = null;
 
-		/**
-		 * @var Datasource
-		 */
-		private $_dataSource;
+		private Datasource $_dataSource;
+
+		private HoneyTrap $_honeyTrap;
 
 		/**
 		 * @return Plugin
 		 */
 		public static function getInstance(): Plugin {
 			if ( null === self::$_instance ) {
-				register_activation_hook(__FILE__, array(self::class, 'activate'));
 				self::$_instance = new self();
 			}
 
@@ -52,16 +41,25 @@ namespace ABNetWpPostViewsAddons {
 
 		public static function activate() {
 			Db::setup();
+			HoneyTrap::setup();
 		}
 
 		private function __construct() {
 			$this->_dataSource = new Datasource();
+			$this->_honeyTrap = new HoneyTrap();
 		}
 
 		public function run(): void {
-			add_action('init', array($this, 'onWpInit'), 10);
-			add_filter( 'postviews_should_count', array( $this, 'filterPostviewsShouldCount' ), 20, 2 );
+			add_action('init', 
+				array($this, 'onWpInit'), 
+				10);
+			add_filter( 'postviews_should_count', 
+				array( $this, 'filterPostviewsShouldCount' ), 
+				20, 
+				2 );
+
 			$this->_getToolsIntegration()->init();
+			$this->_getHoneyTrap()->init();
 		}
 
 		public function onWpInit(): void {
@@ -353,6 +351,10 @@ namespace ABNetWpPostViewsAddons {
 			}
 
 			return $this->_toolsIntegration;
+		}
+
+		private function _getHoneyTrap(): HoneyTrap {
+			return $this->_honeyTrap;
 		}
 
 		private function _flagBotIfFuzzyScoreMoreThan(): int {
