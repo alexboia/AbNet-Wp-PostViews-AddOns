@@ -45,7 +45,7 @@ namespace ABNetWpPostViewsAddons {
 
 			foreach ($urls as $url) {
 				if (!empty($url)) {
-					$lines[] = $url;
+					$lines[] = sprintf('Disallow: %s', $url);
 				}
 			}
 
