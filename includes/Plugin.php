@@ -161,6 +161,10 @@ namespace ABNetWpPostViewsAddons {
 
 		private function _processPostVisit(VisitInfo $visitInfo) {
 			try {
+				if (get_current_user_id() > 0){
+					return;
+				}
+				
 				$result = $this->_dataSource->saveVisitInfo($visitInfo);
 				if (false === $result) {
 					Db::logLastDbError('Failed to save visit info');

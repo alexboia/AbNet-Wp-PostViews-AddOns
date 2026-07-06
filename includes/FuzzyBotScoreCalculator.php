@@ -32,6 +32,10 @@ namespace ABNetWpPostViewsAddons {
 			if (empty($visitInfo->getLanguage())) {
 				$signals['missing_accept_language'] = 10;
 				$score += 10;
+			} else {
+				$languageScore = $this->_scoreLanguage($visitInfo);
+				$signals['accept_language'] = $languageScore;
+				$score += $languageScore;
 			}
 
 			$requestMethodScore = $this->_scoreRequestMethod($visitInfo->getRequestMethod());
@@ -71,6 +75,30 @@ namespace ABNetWpPostViewsAddons {
 
 			return new FuzzyBotScore($score, $signals);
 
+		}
+
+		private function _scoreLanguage(VisitInfo $visitInfo): int {
+			$language = $visitInfo->getLanguage();
+			if (empty($language)) {
+				return 0;
+			}
+
+			$normalizedLanguage = trim(strtoupper($language));
+			if (empty($normalizedLanguage)) {
+				return 0;
+			}
+
+			$weights = array(
+				'ZH-CN' => 15
+			);
+
+			foreach ($weights as $w => $score) {
+				if (stripos($w, $language) !== false) {
+					return $score;
+				}
+			}
+
+			return 0;
 		}
 
 		private function _scoreUserAgent(string|null $userAgent): int {
