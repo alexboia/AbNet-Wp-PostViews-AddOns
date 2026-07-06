@@ -15,6 +15,8 @@ namespace ABNetWpPostViewsAddons {
 
 		private bool $_isBot = false;
 
+		private bool $_maybeWellKnownBot = false;
+
 		private bool $_isFilteredReferer = false;
 
 		private bool $_isSpamReferer = false;
@@ -54,6 +56,15 @@ namespace ABNetWpPostViewsAddons {
 
 		public function isBot(): bool {
 			return $this->_isBot;
+		}
+
+		public function flagWellKnownBot(): void {
+			$this->flagBot();
+			$this->_maybeWellKnownBot = true;
+		}
+
+		public function maybeWellKnownBot(): bool {
+			return $this->_maybeWellKnownBot;
 		}
 
 		public function flagFilteredReferer(): void {

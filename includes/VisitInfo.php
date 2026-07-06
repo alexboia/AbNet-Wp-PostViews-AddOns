@@ -72,7 +72,11 @@ namespace ABNetWpPostViewsAddons {
 
 		private int|null $_visitId;
 
+		//private string $_visitThumbPrint;
+
 		private int|null $_postId;
+
+		//private int|null $_userId;
 
 		private string $_url;
 
@@ -114,11 +118,17 @@ namespace ABNetWpPostViewsAddons {
 
 		private string|null $_acceptContent;
 
+		//private string|null $_xForwardedFor;
+
 		private string|null $_cfIpCountry;
 
 		private string|null $_cfIpAsName;
 
+		//private string|null $_cfRay;
+
 		private string|null $_computedCountry;
+
+		private string|null $_computedCity;
 
 		private string|null $_computedAsn;
 
@@ -131,6 +141,20 @@ namespace ABNetWpPostViewsAddons {
 		private bool $_wasProcessed;
 
 		private bool $_wasDiscarded;
+
+		//private bool $_challengeShown;
+
+		//private int $_challengeReason;
+
+		//private string|null $_challengeToken;
+
+		//private int|null $_challengeFinalAuthId;
+
+		//private string|null $_challengeUnlockedAt;
+
+		//private string|null $_challengeTokenExpiresAt;
+
+		//private string|null $_classification;
 
 		public function __construct(array $info){
 			$this->_visitId = isset($info[self::KEY_VISIT_ID]) 

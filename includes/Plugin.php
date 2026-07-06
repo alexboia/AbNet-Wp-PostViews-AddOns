@@ -135,7 +135,7 @@ namespace ABNetWpPostViewsAddons {
 
 			if ($this->_matchesAnyBotPattern($userAgent, $this->_getBotPatterns())) {
 				abnet_write_log("Request {$userAgentDesc}/{$refererDesc} matches bot patterns.");
-				$context->flagBot();
+				$context->flagWellKnownBot();
 			}
 
 			if ($this->_matchesAnyRefererPattern($referer, $this->_getRefererPatterns(), $strictMode)) {

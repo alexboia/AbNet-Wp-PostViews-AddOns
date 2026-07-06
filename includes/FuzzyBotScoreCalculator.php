@@ -196,6 +196,10 @@ namespace ABNetWpPostViewsAddons {
 				return 5;
 			}
 
+			if ($this->_isShortlinkRedirectReferer($visitInfo)) {
+				return 10;
+			}
+
 			if ($visitInfo->isRefererLocal()) {
 				return -10;
 			}
@@ -205,6 +209,26 @@ namespace ABNetWpPostViewsAddons {
 			}
 
 			return 0;
+		}
+
+		private function _isShortlinkRedirectReferer(VisitInfo $visitInfo): bool {
+			$referer = $visitInfo->getReferer();
+			if (empty($referer) || !$visitInfo->isRefererLocal()) {
+				return false;
+			}
+
+			$parts = parse_url($referer);
+			if (empty($parts['query'])) {
+				return false;
+			}
+
+			$query = array();
+			parse_str($parts['query'], $query);
+
+			$postId = (int) $visitInfo->getPostId();
+			$queryPostId = !empty($query['p']) ? (int) $query['p'] : 0;
+
+			return $queryPostId > 0 && $queryPostId === $postId;
 		}
 
 		private function _scoreCampaignHints(VisitInfo $visitInfo): int {
