@@ -70,6 +70,10 @@ namespace ABNetWpPostViewsAddons {
 		}
 
 		private function _getPostId(): int {
+			if (!is_page() && !is_single()) {
+				return 0;
+			}
+
 			$post = isset($GLOBALS['post']) 
 				? $GLOBALS['post'] 
 				: null;

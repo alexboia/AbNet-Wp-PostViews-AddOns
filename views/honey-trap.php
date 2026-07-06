@@ -10,12 +10,18 @@ if (!defined( 'ABSPATH')) {
 
 <style type="text/css">
 	.system-meta-link {
+		/* 
+			Using security by obfuscation. 
+			No way anybody would find out. 
+		*/
 		position: absolute;
 		top: -9999px;
 		left: -9999px;
 		width: 1px;
 		height: 1px;
 		overflow: hidden;
+		display: none;
+		visibility: hidden;
 	}
 </style>
 
