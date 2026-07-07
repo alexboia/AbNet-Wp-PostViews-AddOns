@@ -93,7 +93,7 @@ namespace ABNetWpPostViewsAddons {
 			);
 
 			foreach ($weights as $w => $score) {
-				if (stripos($w, $language) !== false) {
+				if (stripos($w, $normalizedLanguage) !== false) {
 					return $score;
 				}
 			}
@@ -225,7 +225,11 @@ namespace ABNetWpPostViewsAddons {
 			}
 
 			if ($this->_isShortlinkRedirectReferer($visitInfo)) {
-				return 10;
+				return 15;
+			}
+
+			if ($this->_isRefererSameAsTargetUrl($visitInfo)) {
+				return 20;
 			}
 
 			if ($visitInfo->isRefererLocal()) {
@@ -237,6 +241,36 @@ namespace ABNetWpPostViewsAddons {
 			}
 
 			return 0;
+		}
+
+		private function _isRefererSameAsTargetUrl(VisitInfo $visitInfo): bool {
+			//Check for referers such as:
+			// - target url: /wpabnet/system-information/
+			// - referer: https://alexboia.net/wpabnet/system-information
+
+			$referer = $visitInfo->getReferer();
+			if (empty($referer)) {
+				return false;
+			}
+
+			$targetUrl = $visitInfo->getUrl();
+			if (empty($targetUrl)) {
+				return false;
+			}
+
+			$refererParts = parse_url($referer);
+			$targetParts = parse_url($targetUrl);
+
+			$refererPath = isset($refererParts['path'])
+				? trim(trim($refererParts['path'], '/'))
+				: '';
+			$targetPath = isset($targetParts['path'])
+				? trim(trim($targetParts['path'], '/'))
+				: '';
+
+			return !empty($refererPath)
+				&& !empty($targetPath)
+				&& strtolower($refererPath) === strtolower($targetPath);
 		}
 
 		private function _isShortlinkRedirectReferer(VisitInfo $visitInfo): bool {
