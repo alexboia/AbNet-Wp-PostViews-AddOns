@@ -8,6 +8,8 @@ namespace ABNetWpPostViewsAddons {
 	}
 
 	final class VisitContext {
+		public const string DEBUG_BOT_QUERY_KEY = 'abnet_debug_bot';
+
 		/**
 		 * @var VisitContext|null
 		 */
@@ -26,6 +28,10 @@ namespace ABNetWpPostViewsAddons {
 		private bool $_wasCounted = false;
 
 		private int $_fuzzyBotScore = 0;
+
+		private bool|null $_debugBotFlag = null;
+
+		private string|null $_honeyTrappedBotSignature = null;
 
 		/**
 		 * @return VisitContext
@@ -56,6 +62,19 @@ namespace ABNetWpPostViewsAddons {
 
 		public function isBot(): bool {
 			return $this->_isBot;
+		}
+
+		public function flagPreviouslyHoneyTrappedBot(string $signature): void {
+			$this->_honeyTrappedBotSignature = $signature;
+			$this->flagBot();
+		}
+
+		public function isPreviouslyHoneyTrappedBot(): bool {
+			return !empty($this->_honeyTrappedBotSignature);
+		}
+
+		public function getPreviouslyHoneyTrappedBotSignature(): string|null {
+			return $this->_honeyTrappedBotSignature;
 		}
 
 		public function flagWellKnownBot(): void {
@@ -120,6 +139,46 @@ namespace ABNetWpPostViewsAddons {
 			}
 
 			return null;
+		}
+
+		public function isDebugBot(): bool {
+			if ($this->_debugBotFlag === null) {
+				$this->_setDebugBotFlag();
+			}
+			return $this->_debugBotFlag;
+		}
+
+		private function _setDebugBotFlag(): void {
+			$this->_debugBotFlag = false;
+			if (empty($_GET[self::DEBUG_BOT_QUERY_KEY])) {
+				return;
+			}
+
+			if (intval($_GET[self::DEBUG_BOT_QUERY_KEY]) !== 1) {
+				return;
+			}
+
+			$this->_debugBotFlag = $this->_currentUserCanSetDebugBotFlag() 
+				|| $this->_isWpDebugEnabled();
+		}
+
+		private function _currentUserCanSetDebugBotFlag(): bool {
+			if (!is_user_logged_in()) {
+				return false;
+			}
+
+			$user = wp_get_current_user();
+			$allowedRoles = ['editor', 'administrator', 'author'];
+
+			$commonRoles = array_intersect($allowedRoles, 
+				$user->roles);
+				
+			return !empty($commonRoles);
+		}
+
+		private function _isWpDebugEnabled(): bool {
+			return defined('WP_DEBUG') 
+				&& constant('WP_DEBUG') === true;
 		}
 
 		public function flagCounted(): void {

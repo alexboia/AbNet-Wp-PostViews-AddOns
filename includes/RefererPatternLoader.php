@@ -8,20 +8,7 @@ namespace ABNetWpPostViewsAddons {
 	}
 
 	final class RefererPatternLoader {
-		/**
-		 * @var string
-		 */
-		private string $_pluginFile = '';
-
 		private static array|null $_cachedBotFileEntries = null;
-
-		/**
-		 * @param string $pluginFile
-		 */
-		public function __construct(string $pluginFile) {
-			$this->_pluginFile = (string)$pluginFile;
-		}
-
 		/**
 		 * @return string[]
 		 */

@@ -114,5 +114,32 @@ namespace ABNetWpPostViewsAddons {
 
 			return (int)$wpdb->insert_id;
 		}
+
+		public function isHoneyTrappedBot(string $signature): bool {
+			if (empty($signature)) {
+				return false;
+			}
+
+			/**
+			 * @var \wpdb $wpdb
+			 */
+			global $wpdb;
+
+			$tableName = $this->_getHoneyTrappedBotsTableName();
+			$row = $wpdb->get_row(
+				$wpdb->prepare(
+					"SELECT COUNT(*) AS trapped_bot_count
+						FROM {$tableName} 
+						WHERE bot_signature = %s",
+					$signature
+				),
+				ARRAY_A
+			);
+
+			return is_array($row) 
+				&& !empty($row) 
+				&& !empty($row['trapped_bot_count']) 
+				&& intval($row['trapped_bot_count']) > 0;
+		}
 	}
 }

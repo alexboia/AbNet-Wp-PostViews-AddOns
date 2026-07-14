@@ -147,15 +147,7 @@ namespace ABNetWpPostViewsAddons {
 		}
 
 		private function _buildSignatureOptions(): VisitSignatureOptions {
-			$key = $this->_getSignatureKey();
-			return new VisitSignatureOptions(array(
-				VisitSignatureOptions::KEY_KEY => $key,
-			));
-		}
-
-		private function _getSignatureKey(): string {
-			$sigKeyManager = new SignatureKeyManager();
-			return $sigKeyManager->getSignatureKey();
+			return SignatureHelper::buildSignatureOptions();
 		}
 
 		private function _determineTrapType(HoneyTrapDescriptor $descriptor): string {

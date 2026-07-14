@@ -19,16 +19,7 @@ namespace ABNetWpPostViewsAddons {
 
 		private const LAST_SUCCESSFUL_UPDATE_OPTION = 'abnet_wp_post_views_addons_last_successful_update';
 
-		private string $_pluginFile = '';
-
-		/**
-		 * @var RefererPatternUpdater|null
-		 */
-		private $_updater = null;
-
-		public function __construct( string $pluginFile ) {
-			$this->_pluginFile = $pluginFile;
-		}
+		private RefererPatternUpdater|null $_updater = null;
 
 		public function init(): void {
 			add_action('admin_menu', 
@@ -294,7 +285,6 @@ namespace ABNetWpPostViewsAddons {
 		 */
 		private function _getUpdater(bool $useLastDownloadedFile): RefererPatternUpdater {
 			$this->_updater = new RefererPatternUpdater(
-				$this->_pluginFile,
 				$useLastDownloadedFile
 			);
 

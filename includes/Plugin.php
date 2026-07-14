@@ -10,18 +10,6 @@ namespace ABNetWpPostViewsAddons {
 	final class Plugin {
 		private static Plugin|null $_instance = null;
 
-		/**
-		 * @var string[]|null
-		 */
-		private $_botPatterns = null;
-
-		/**
-		 * @var string[]|null
-		 */
-		private $_refererPatterns = null;
-
-		private RefererPatternLoader|null $_refererPatternLoader = null;
-
 		private ToolsIntegration|null $_toolsIntegration = null;
 
 		private Datasource $_dataSource;
@@ -53,10 +41,16 @@ namespace ABNetWpPostViewsAddons {
 			add_action('init', 
 				array($this, 'onWpInit'), 
 				10);
+
 			add_filter( 'postviews_should_count', 
 				array( $this, 'filterPostviewsShouldCount' ), 
 				20, 
 				2 );
+
+			add_filter('comments_open', 
+				array($this, 'disableCommentsIfBots'), 
+				20, 
+				2);
 
 			$this->_getToolsIntegration()->init();
 			$this->_getHoneyTrap()->init();
@@ -64,6 +58,18 @@ namespace ABNetWpPostViewsAddons {
 
 		public function onWpInit(): void {
 			$this->_migrateTablesIfVersionDiffers();
+		}
+
+		public function disableCommentsIfBots(bool $commentsOpen, int $postId): bool {
+			if (!$commentsOpen) {
+				return $commentsOpen;
+			}
+
+			$context = VisitContext::getInstance();
+
+			return !$context->isBot() 
+				&& !$context->isFilteredReferer() 
+				&& !$context->isSpamReferer();
 		}
 
 		private function _migrateTablesIfVersionDiffers() {
@@ -116,47 +122,9 @@ namespace ABNetWpPostViewsAddons {
 		}
 
 		private function _evaluatePostVisit(VisitContext $context): VisitInfo {
-			$collector = new VisitInfoCollector();
-			$calculator = new FuzzyBotScoreCalculator();
-
 			$strictMode = $this->_isStrictMode();
-			$visitInfo = $collector->collectVisitInfo($context);
-
-			abnet_write_log(sprintf("Strict mode: %s.", 
-				$strictMode ? "Yes" : "No"));
-
-			$userAgent = $visitInfo->getUserAgent();
-			$referer = $visitInfo->getReferer();
-
-			$userAgentDesc = !empty($userAgent) ? $userAgent : "<NO USER AGENT>";
-			$refererDesc = !empty($referer) ? $referer : "<NO REFERER>";
-
-			if ($this->_matchesAnyBotPattern($userAgent, $this->_getBotPatterns())) {
-				abnet_write_log("Request {$userAgentDesc}/{$refererDesc} matches bot patterns.");
-				$context->flagWellKnownBot();
-			}
-
-			if ($this->_matchesAnyRefererPattern($referer, $this->_getRefererPatterns(), $strictMode)) {
-				abnet_write_log("Request {$userAgentDesc}/{$refererDesc} matches referer patterns.");	
-				$context->flagFilteredReferer();
-			}
-
-			$visitInfo = $visitInfo->updateFromVisitContext($context);
-			if (!$context->isBot()) {
-				$fuzzyBotScore = $calculator->calculate($visitInfo);
-				$fuzzyBotScore = $this->_filterFuzzyBotScoreScore($fuzzyBotScore, $visitInfo);
-				$context->setFuzzyBotScore($fuzzyBotScore->getScore());
-
-				$autoFlagScoreThreshold = $this->_flagBotIfFuzzyScoreMoreThan();
-				if (!$context->isBot() && $context->getFuzzyBotScore() >= $autoFlagScoreThreshold) {
-					abnet_write_log("Request {$userAgentDesc}/{$refererDesc} has fuzzy boy score above trheshold ({$context->getFuzzyBotScore()}).");	
-					$context->flagBot();
-				}
-
-				$visitInfo = $visitInfo->updateFromVisitContext($context);
-			}
-
-			return $visitInfo;
+			$postVisitEvaluator = new PostVisitEvaluator($strictMode);
+			return $postVisitEvaluator->evaluatePostVisit($context);
 		}
 
 		private function _processPostVisit(VisitInfo $visitInfo) {
@@ -174,61 +142,6 @@ namespace ABNetWpPostViewsAddons {
 			}
 		}
 
-		private function _filterFuzzyBotScoreScore(FuzzyBotScore $score, VisitInfo $visitInfo): FuzzyBotScore {
-			/**
-			 * Filters the computed fuzzy bot score.
-			 *
-			 * @param FuzzyBotScore $score Bot probability score, from 0 to 100.
-			 * @param VisitInfo $visitInfo Visit information used to compute the score.
-			 */
-			$filteredScore = apply_filters('abnet_wpv_addons_fuzzy_bot_score',
-				$score,
-				$visitInfo);
-
-			return $filteredScore instanceof FuzzyBotScore 
-				? $filteredScore 
-				: $score;
-		}
-
-		private function _matchesAnyBotPattern(string|null $value, array $patterns): bool {
-			if (empty($value) || empty($patterns)) {
-				return false;
-			}
-
-			return $this->_matchesAnyPattern($value, $patterns);
-		}
-
-		/**
-		 * @param string   $value
-		 * @param string[] $patterns
-		 * @return bool
-		 */
-		private function _matchesAnyPattern(string $value, array $patterns): bool {
-			if (empty($value) || empty($patterns)) {
-				return false;
-			}
-
-			foreach ($patterns as $pattern) {
-				if (!empty($pattern) && false !== stripos($value, $pattern)) {
-					return true;
-				}
-			}
-
-			return false;
-		}
-
-		private function _matchesAnyRefererPattern(string|null $value, array $patterns, $strict = false): bool {
-			if (empty($value) || empty($patterns)) {
-				return false;
-			}
-
-			if ($strict) {
-				return $this->_matchesAnyRefererDomain($value, $patterns);
-			}
-
-			return $this->_matchesAnyPattern($value, $patterns);
-		}
-
 		/**
 		 * Strict mode is active only when ABNET_WP_POST_VIEWS_STRICT exists and is boolean true.
 		 */
@@ -241,67 +154,6 @@ namespace ABNetWpPostViewsAddons {
 			return abnet_wp_post_views_addons_tracking_enabled() === true;
 		}
 
-		private function _matchesAnyRefererDomain(string $referer, array $patterns): bool {
-			$refererHost = wp_parse_url($referer, PHP_URL_HOST);
-			if (!is_string($refererHost) || empty($refererHost)) {
-				return false;
-			}
-
-			$refererHost = strtolower(ltrim(trim($refererHost), '.'));
-
-			foreach ($patterns as $pattern) {
-				$domain = $this->_normalizeDomain($pattern);
-				if (empty($domain)) {
-					continue;
-				}
-
-				if ($this->_matchesDomainOrSubdomain($refererHost, $domain)) {
-					return true;
-				}
-			}
-
-			return false;
-		}
-
-		private function _matchesDomainOrSubdomain(string $refererHost, string $domain): bool {
-			$subdomainSuffix = '.' . $domain;
-			return $refererHost === $domain 
-				|| substr($refererHost, -strlen($subdomainSuffix)) 
-					=== $subdomainSuffix;
-		}
-
-		private function _normalizeDomain(string $domain): string|null {
-			$domain = trim(strtolower((string) $domain));
-			if (empty($domain)) {
-				return '';
-			}
-
-			$domain = preg_replace('#^https?://#', '', $domain);
-			if (!is_string($domain) || empty($domain)) {
-				return '';
-			}
-
-			$domain = preg_replace('#/.*$#', '', $domain);
-			if (!is_string($domain) || empty($domain)) {
-				return '';
-			}
-
-			$defaultNormalizedDomain = ltrim(trim($domain), '.');
-
-			/**
-			 * Filters a domain string after it has been normalized (lowercased, protocol stripped, path stripped, leading dots removed).
-			 *
-			 * @param string $defaultNormalizedDomain The normalized domain string, e.g. "example.com".
-			 * @return string|null The filtered domain string. Any non-string is ignored and the default is used instead. A null return value will cause the domain to be skipped altogether.
-			 */
-			$normalizedDomain = apply_filters('abnet_wpv_addons_normalized_domain',
-				$defaultNormalizedDomain);
-
-			return is_string($normalizedDomain) || $normalizedDomain === null
-				? $normalizedDomain 
-				: $defaultNormalizedDomain;
-		}
-
 		/**
 		 * Obey native WP-PostViews "Exclude Bot Views".
 		 *
@@ -312,46 +164,11 @@ namespace ABNetWpPostViewsAddons {
 		}
 
 		/**
-		 * @return string[]
-		 */
-		private function _getBotPatterns(): array {
-			if (null !== $this->_botPatterns) {
-				return $this->_botPatterns;
-			}
-
-			$this->_botPatterns = $this->_getRefererPatternLoader()->getBotPatterns();
-			return $this->_botPatterns;
-		}
-
-		/**
-		 * @return string[]
-		 */
-		private function _getRefererPatterns(): array {
-			if (null !== $this->_refererPatterns) {
-				return $this->_refererPatterns;
-			}
-
-			$this->_refererPatterns = $this->_getRefererPatternLoader()->loadRefererPatterns();
-			return $this->_refererPatterns;
-		}
-
-		/**
-		 * @return RefererPatternLoader
-		 */
-		private function _getRefererPatternLoader(): RefererPatternLoader {
-			if (null === $this->_refererPatternLoader) {
-				$this->_refererPatternLoader = new RefererPatternLoader(__FILE__);
-			}
-
-			return $this->_refererPatternLoader;
-		}
-
-		/**
 		 * @return ToolsIntegration
 		 */
 		private function _getToolsIntegration(): ToolsIntegration {
 			if (null === $this->_toolsIntegration) {
-				$this->_toolsIntegration = new ToolsIntegration(__FILE__);
+				$this->_toolsIntegration = new ToolsIntegration();
 			}
 
 			return $this->_toolsIntegration;
@@ -359,23 +176,6 @@ namespace ABNetWpPostViewsAddons {
 
 		private function _getHoneyTrap(): HoneyTrap {
 			return $this->_honeyTrap;
-		}
-
-		private function _flagBotIfFuzzyScoreMoreThan(): int {
-			//abnet_wpv_addons_fuzzy_bot_score
-			$min = 0;
-			if (defined('ABNET_WP_POST_VIEWS_FUZZY_BOT_SCORE_THRESHOLD')) {
-				$value = constant('ABNET_WP_POST_VIEWS_FUZZY_BOT_SCORE_THRESHOLD');
-				if (is_int($value)) {
-					$min = $value;
-				}
-			}
-
-			if ($min <= 0) {
-				$min = 65;
-			}
-
-			return $min;
 		}
 	}
 }

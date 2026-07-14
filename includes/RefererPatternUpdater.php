@@ -17,18 +17,13 @@ namespace ABNetWpPostViewsAddons {
 
 		private bool $_useLastDownloadedFile = false;
 
-		private string $_pluginFile = '';
-
 		/**
-		 * @param string $pluginFile
 		 * @param bool   $useLastDownloadedFile
 		 * @param string $aiRobotsTxtSourceUrl
 		 */
-		public function __construct( string $pluginFile, 
-			bool $useLastDownloadedFile = false, 
+		public function __construct( bool $useLastDownloadedFile = false, 
 			string $aiRobotsTxtSourceUrl = '' ) {
 
-			$this->_pluginFile = $pluginFile;
 			$this->_useLastDownloadedFile = $useLastDownloadedFile;
 
 			if ('' !== trim($aiRobotsTxtSourceUrl)) {
