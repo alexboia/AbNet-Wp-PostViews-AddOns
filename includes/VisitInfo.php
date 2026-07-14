@@ -70,6 +70,10 @@ namespace ABNetWpPostViewsAddons {
 
 		public const string KEY_WAS_COUNTED = 'was_counted';
 
+		public const string KEY_CLASSIFICATION = 'classification';
+
+		public const string KEY_TRAPPED_BOT_SIGNATURE = 'trapped_bot_signature';
+
 		private int|null $_visitId;
 
 		//private string $_visitThumbPrint;
@@ -154,27 +158,29 @@ namespace ABNetWpPostViewsAddons {
 
 		//private string|null $_challengeTokenExpiresAt;
 
-		//private string|null $_classification;
+		private string|null $_trappedBotSignature;
+
+		private string|null $_classification;
 
 		public function __construct(array $info){
-			$this->_visitId = isset($info[self::KEY_VISIT_ID]) 
+			$this->_visitId = !empty($info[self::KEY_VISIT_ID]) 
 				? (int)$info[self::KEY_VISIT_ID] 
 				: null;
 
-			$this->_postId = isset($info[self::KEY_POST_ID]) 
+			$this->_postId = !empty($info[self::KEY_POST_ID]) 
 				? (int)$info[self::KEY_POST_ID] 
 				: null;
 
 			$this->_url = (string)($info[self::KEY_URL] ?? '');
 			$this->_ipAddress = (string)($info[self::KEY_IP_ADDRESS] ?? '');
 			
-			$this->_referer = isset($info[self::KEY_REFERER]) 
+			$this->_referer = !empty($info[self::KEY_REFERER]) 
 				? (string)$info[self::KEY_REFERER] 
 				: null;
 			
 			$this->_refererIsLocal = (bool)($info[self::KEY_REFERER_IS_LOCAL] ?? false);
 
-			$this->_userAgent = isset($info[self::KEY_USER_AGENT]) 
+			$this->_userAgent = !empty($info[self::KEY_USER_AGENT]) 
 				? (string)$info[self::KEY_USER_AGENT] 
 				: null;
 			
@@ -187,61 +193,69 @@ namespace ABNetWpPostViewsAddons {
 			$this->_isFilteredReferer = (bool)($info[self::KEY_IS_FILTERED_REFERER] ?? false);
 			$this->_isSpamReferer = (bool)($info[self::KEY_IS_SPAM_REFERER] ?? false);
 
-			$this->_searchTerm = isset($info[self::KEY_SEARCH_TERM])
+			$this->_searchTerm = !empty($info[self::KEY_SEARCH_TERM])
 				? (string)$info[self::KEY_SEARCH_TERM]
 				: null;
 
-			$this->_utmSource = isset($info[self::KEY_UTM_SOURCE])
+			$this->_utmSource = !empty($info[self::KEY_UTM_SOURCE])
 				? (string)$info[self::KEY_UTM_SOURCE]
 				: null;
 
-			$this->_utmMedium = isset($info[self::KEY_UTM_MEDIUM])
+			$this->_utmMedium = !empty($info[self::KEY_UTM_MEDIUM])
 				? (string)$info[self::KEY_UTM_MEDIUM]
 				: null;
 
-			$this->_utmCampaign = isset($info[self::KEY_UTM_CAMPAIGN])
+			$this->_utmCampaign = !empty($info[self::KEY_UTM_CAMPAIGN])
 				? (string)$info[self::KEY_UTM_CAMPAIGN]
 				: null;
 	
-			$this->_utmTerm = isset($info[self::KEY_UTM_TERM])
+			$this->_utmTerm = !empty($info[self::KEY_UTM_TERM])
 				? (string)$info[self::KEY_UTM_TERM]
 				: null;
 
-			$this->_utmContent = isset($info[self::KEY_UTM_CONTENT])
+			$this->_utmContent = !empty($info[self::KEY_UTM_CONTENT])
 				? (string)$info[self::KEY_UTM_CONTENT]
 				: null;
 
-			$this->_acceptContent = isset($info[self::KEY_ACCEPT_CONTENT])
+			$this->_acceptContent = !empty($info[self::KEY_ACCEPT_CONTENT])
 				? (string)$info[self::KEY_ACCEPT_CONTENT]
 				: null;
 
-			$this->_cfIpCountry = isset($info[self::KEY_CF_IP_COUNTRY])
+			$this->_cfIpCountry = !empty($info[self::KEY_CF_IP_COUNTRY])
 				? (string)$info[self::KEY_CF_IP_COUNTRY]
 				: null;
 
-			$this->_cfIpAsName = isset($info[self::KEY_CF_IP_AS_NAME])
+			$this->_cfIpAsName = !empty($info[self::KEY_CF_IP_AS_NAME])
 				? (string)$info[self::KEY_CF_IP_AS_NAME]
 				: null;
 
-			$this->_computedCountry = isset($info[self::KEY_COMPUTED_COUNTRY])
+			$this->_computedCountry = !empty($info[self::KEY_COMPUTED_COUNTRY])
 				? (string)$info[self::KEY_COMPUTED_COUNTRY]
 				: null;
 
-			$this->_computedAsn = isset($info[self::KEY_COMPUTED_ASN])
+			$this->_computedAsn = !empty($info[self::KEY_COMPUTED_ASN])
 				? (string)$info[self::KEY_COMPUTED_ASN]
 				: null;
 
-			$this->_computedNetworkName = isset($info[self::KEY_COMPUTED_NETWORK_NAME])
+			$this->_computedNetworkName = !empty($info[self::KEY_COMPUTED_NETWORK_NAME])
 				? (string)$info[self::KEY_COMPUTED_NETWORK_NAME]
 				: null;
 
-			$this->_fuzzyBotScore = isset($info[self::KEY_FUZZY_BOT_SCORE])
+			$this->_fuzzyBotScore = !empty($info[self::KEY_FUZZY_BOT_SCORE])
 				? (int)$info[self::KEY_FUZZY_BOT_SCORE]
 				: 0;
 
 			$this->_wasCounted =(bool)($info[self::KEY_WAS_COUNTED] ?? false);
 			$this->_wasProcessed = (bool)($info[self::KEY_WAS_PROCESSED] ?? false);
 			$this->_wasDiscarded = (bool)($info[self::KEY_WAS_DISCARDED] ?? false);
+
+			$this->_classification = !empty($info[self::KEY_CLASSIFICATION])
+				? (string)$info[self::KEY_CLASSIFICATION]
+				: null;
+
+			$this->_trappedBotSignature = !empty($info[self::KEY_TRAPPED_BOT_SIGNATURE])
+				? (string)$info[self::KEY_TRAPPED_BOT_SIGNATURE]
+				: null;
 		}
 
 		public static function fromDbArray(array $data): self {
@@ -293,10 +307,11 @@ namespace ABNetWpPostViewsAddons {
 				self::KEY_COMPUTED_ASN => $this->_computedAsn,
 				self::KEY_COMPUTED_NETWORK_NAME => $this->_computedNetworkName,
 				self::KEY_FUZZY_BOT_SCORE => $this->_fuzzyBotScore,
-				self::KEY_WAS_COUNTED => $this->_wasCounted
-				,
+				self::KEY_WAS_COUNTED => $this->_wasCounted,
 				self::KEY_WAS_PROCESSED => $this->_wasProcessed,
-				self::KEY_WAS_DISCARDED => $this->_wasDiscarded
+				self::KEY_WAS_DISCARDED => $this->_wasDiscarded,
+				self::KEY_CLASSIFICATION => $this->_classification,
+				self::KEY_TRAPPED_BOT_SIGNATURE => $this->_trappedBotSignature
 			];
 		}
 
@@ -323,6 +338,9 @@ namespace ABNetWpPostViewsAddons {
 			$data[self::KEY_IS_SPAM_REFERER] = $context->isSpamReferer();
 			$data[self::KEY_WAS_COUNTED] = $context->wasCounted();
 			$data[self::KEY_FUZZY_BOT_SCORE] = $context->getFuzzyBotScore();
+
+			$data[self::KEY_CLASSIFICATION] = VisitClassification::classify($context);
+			$data[self::KEY_TRAPPED_BOT_SIGNATURE] = $context->getPreviouslyHoneyTrappedBotSignature();
 
 			return new self($data);
 		}
@@ -449,6 +467,14 @@ namespace ABNetWpPostViewsAddons {
 
 		public function getFuzzyBotScore(): int {
 			return $this->_fuzzyBotScore;
+		}
+
+		public function getTrappedBotSignature(): ?string {
+			return $this->_trappedBotSignature;
+		}
+
+		public function getClassification() : string {
+			return $this->_classification;
 		}
 	}
 }

@@ -59,6 +59,7 @@ namespace ABNetWpPostViewsAddons {
 			}
 
 			$visitInfo = $visitInfo->updateFromVisitContext($context);
+
 			if (!$context->isBot()) {
 				$isFuzzyBot = $this->_evaluateFuzzyBot($visitInfo, $context);
 				if ($isFuzzyBot) {

@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace ABNetWpPostViewsAddons {
 
-	if (! defined( 'ABSPATH' ) ) {
+	if (!defined('ABSPATH')) {
 		exit;
 	}
 

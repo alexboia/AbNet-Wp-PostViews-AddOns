@@ -58,6 +58,8 @@ namespace ABNetWpPostViewsAddons {
 				'fuzzy_bot_score' => "INT(11) NOT NULL DEFAULT '0'",
 				'was_processed' => "TINYINT(1) NOT NULL DEFAULT '0'",
 				'was_discarded' => "TINYINT(1) NOT NULL DEFAULT '0'",
+				'classification' => 'VARCHAR(64) NULL',
+				'trapped_bot_signature' => 'VARCHAR(64) NULL'
 			);
 
 			foreach ($columns as $columnName => $definition) {
@@ -132,9 +134,11 @@ namespace ABNetWpPostViewsAddons {
 				was_counted TINYINT(1) NOT NULL DEFAULT '0',
 				was_processed TINYINT(1) NOT NULL DEFAULT '0',
 				was_discarded TINYINT(1) NOT NULL DEFAULT '0',
+				classification VARCHAR(64) NULL,
+				trapped_bot_signature VARCHAR(64) NULL,
 				PRIMARY KEY (visit_id),
 				KEY key_post_id (post_id),
-				KEY key_visit_timestamp (visit_language)
+				KEY key_visit_timestamp (visit_timestamp)
 			) $charsetCollate;";
 
 			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
