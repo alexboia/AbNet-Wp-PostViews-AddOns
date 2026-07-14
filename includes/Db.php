@@ -59,7 +59,8 @@ namespace ABNetWpPostViewsAddons {
 				'was_processed' => "TINYINT(1) NOT NULL DEFAULT '0'",
 				'was_discarded' => "TINYINT(1) NOT NULL DEFAULT '0'",
 				'classification' => 'VARCHAR(64) NULL',
-				'trapped_bot_signature' => 'VARCHAR(64) NULL'
+				'trapped_bot_signature' => 'VARCHAR(64) NULL',
+				'is_debug_bot' => "TINYINT(1) NOT NULL DEFAULT '0'"
 			);
 
 			foreach ($columns as $columnName => $definition) {
@@ -136,6 +137,7 @@ namespace ABNetWpPostViewsAddons {
 				was_discarded TINYINT(1) NOT NULL DEFAULT '0',
 				classification VARCHAR(64) NULL,
 				trapped_bot_signature VARCHAR(64) NULL,
+				is_debug_bot TINYINT(1) NOT NULL DEFAULT '0',
 				PRIMARY KEY (visit_id),
 				KEY key_post_id (post_id),
 				KEY key_visit_timestamp (visit_timestamp)

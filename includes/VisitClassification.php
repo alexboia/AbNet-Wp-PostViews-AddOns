@@ -14,6 +14,8 @@ namespace ABNetWpPostViewsAddons {
 
 		public const string FUZZY_BOT = 'fuzzy_bot';
 
+		public const string DEBUG_BOT = 'debug_bot';
+
 		public const string BOT = 'bot';
 
 		public const string FILTERED_REFERER = 'filtered_referer';
@@ -27,6 +29,8 @@ namespace ABNetWpPostViewsAddons {
 					$classification = self::HONEY_TRAPPED_BOT;
 				} else if ($context->getFuzzyBotScore() > 0) {
 					$classification = self::FUZZY_BOT;
+				} else if ($context->isDebugBot()) {
+					$classification = self::DEBUG_BOT;
 				} else {
 					$classification = self::BOT;
 				}

@@ -74,6 +74,8 @@ namespace ABNetWpPostViewsAddons {
 
 		public const string KEY_TRAPPED_BOT_SIGNATURE = 'trapped_bot_signature';
 
+		public const string KEY_DEBUG_BOT = 'is_debug_bot';
+
 		private int|null $_visitId;
 
 		//private string $_visitThumbPrint;
@@ -161,6 +163,8 @@ namespace ABNetWpPostViewsAddons {
 		private string|null $_trappedBotSignature;
 
 		private string|null $_classification;
+
+		private bool $_isDebugBot;
 
 		public function __construct(array $info){
 			$this->_visitId = !empty($info[self::KEY_VISIT_ID]) 
@@ -256,6 +260,8 @@ namespace ABNetWpPostViewsAddons {
 			$this->_trappedBotSignature = !empty($info[self::KEY_TRAPPED_BOT_SIGNATURE])
 				? (string)$info[self::KEY_TRAPPED_BOT_SIGNATURE]
 				: null;
+
+			$this->_isDebugBot = (bool)($info[self::KEY_DEBUG_BOT] ?? false);
 		}
 
 		public static function fromDbArray(array $data): self {
@@ -273,6 +279,8 @@ namespace ABNetWpPostViewsAddons {
 				&& intval($data[self::KEY_WAS_PROCESSED]) === 1;
 			$data[self::KEY_WAS_DISCARDED] = !empty($data[self::KEY_WAS_DISCARDED])
 				&& intval($data[self::KEY_WAS_DISCARDED]) === 1;
+			$data[self::KEY_DEBUG_BOT] = !empty($data[self::KEY_DEBUG_BOT])
+				&& intval($data[self::KEY_DEBUG_BOT]) === 1;
 
 			return new self($data);
 		}
@@ -311,7 +319,8 @@ namespace ABNetWpPostViewsAddons {
 				self::KEY_WAS_PROCESSED => $this->_wasProcessed,
 				self::KEY_WAS_DISCARDED => $this->_wasDiscarded,
 				self::KEY_CLASSIFICATION => $this->_classification,
-				self::KEY_TRAPPED_BOT_SIGNATURE => $this->_trappedBotSignature
+				self::KEY_TRAPPED_BOT_SIGNATURE => $this->_trappedBotSignature,
+				self::KEY_DEBUG_BOT => $this->_isDebugBot
 			];
 		}
 
@@ -325,6 +334,7 @@ namespace ABNetWpPostViewsAddons {
 			$data[self::KEY_WAS_COUNTED] = $data[self::KEY_WAS_COUNTED] ? 1 : 0;
 			$data[self::KEY_WAS_PROCESSED] = $data[self::KEY_WAS_PROCESSED] ? 1 : 0;
 			$data[self::KEY_WAS_DISCARDED] = $data[self::KEY_WAS_DISCARDED] ? 1 : 0;
+			$data[self::KEY_DEBUG_BOT] = $data[self::KEY_DEBUG_BOT] ? 1 : 0;
 
 			return $data;
 		}
@@ -341,6 +351,7 @@ namespace ABNetWpPostViewsAddons {
 
 			$data[self::KEY_CLASSIFICATION] = VisitClassification::classify($context);
 			$data[self::KEY_TRAPPED_BOT_SIGNATURE] = $context->getPreviouslyHoneyTrappedBotSignature();
+			$data[self::KEY_DEBUG_BOT] = $context->isDebugBot();
 
 			return new self($data);
 		}
@@ -475,6 +486,10 @@ namespace ABNetWpPostViewsAddons {
 
 		public function getClassification() : string {
 			return $this->_classification;
+		}
+
+		public function isDebugBot(): bool {
+			return $this->_isDebugBot;
 		}
 	}
 }

@@ -129,7 +129,7 @@ namespace ABNetWpPostViewsAddons {
 
 		private function _processPostVisit(VisitInfo $visitInfo) {
 			try {
-				if (get_current_user_id() > 0){
+				if (get_current_user_id() > 0 && !$visitInfo->isDebugBot()){
 					return;
 				}
 				
