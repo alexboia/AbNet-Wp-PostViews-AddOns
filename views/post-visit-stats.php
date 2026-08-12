@@ -17,7 +17,7 @@ $panels = array(
 	),
 );
 ?>
-<div class="abnet-visit-stats" data-abnet-stats-tabs>
+<div class="abnet-visit-stats" data-abnet-stats-tabs="true">
 	<div class="abnet-visit-stats-tabs" role="tablist">
 		<?php foreach ($panels as $panelKey => $panel): ?>
 			<button type="button" 

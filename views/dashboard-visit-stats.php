@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 ?>
-<div class="abnet-visit-stats" data-abnet-stats>
+<div class="abnet-visit-stats" data-abnet-stats="true">
 	<?php if (empty($stats)): ?>
 		<p><?php echo esc_html__('No visit statistics are available yet.', 'abnet-wp-post-views-addons'); ?></p>
 	<?php else: ?>

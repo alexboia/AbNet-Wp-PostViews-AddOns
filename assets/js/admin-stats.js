@@ -14,22 +14,24 @@
 		});
 	}
 
-	document.querySelectorAll('[data-abnet-stats]').forEach(function (chart) {
-		sizeChart(chart, '.abnet-visit-stats-bar-row');
-	});
-
-	document.querySelectorAll('[data-abnet-stats-tabs]').forEach(function (container) {
-		container.querySelectorAll('.abnet-visit-stats-daily-chart').forEach(function (chart) {
-			sizeChart(chart, '.abnet-visit-stats-day');
+	document.addEventListener("DOMContentLoaded", function() {
+		document.querySelectorAll('[data-abnet-stats]').forEach(function (chart) {
+			sizeChart(chart, '.abnet-visit-stats-bar-row');
 		});
 
-		container.querySelectorAll('[role="tab"]').forEach(function (tab) {
-			tab.addEventListener('click', function () {
-				container.querySelectorAll('[role="tab"]').forEach(function (candidate) {
-					var isActive = candidate === tab;
-					candidate.classList.toggle('is-active', isActive);
-					candidate.setAttribute('aria-selected', isActive ? 'true' : 'false');
-					container.querySelector('#' + candidate.getAttribute('aria-controls')).hidden = !isActive;
+		document.querySelectorAll('[data-abnet-stats-tabs]').forEach(function (container) {
+			container.querySelectorAll('.abnet-visit-stats-daily-chart').forEach(function (chart) {
+				sizeChart(chart, '.abnet-visit-stats-day');
+			});
+
+			container.querySelectorAll('[role="tab"]').forEach(function (tab) {
+				tab.addEventListener('click', function () {
+					container.querySelectorAll('[role="tab"]').forEach(function (candidate) {
+						var isActive = candidate === tab;
+						candidate.classList.toggle('is-active', isActive);
+						candidate.setAttribute('aria-selected', isActive ? 'true' : 'false');
+						container.querySelector('#' + candidate.getAttribute('aria-controls')).hidden = !isActive;
+					});
 				});
 			});
 		});
