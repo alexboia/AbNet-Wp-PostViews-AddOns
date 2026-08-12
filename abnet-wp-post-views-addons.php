@@ -3,7 +3,7 @@
  * Plugin Name: ABNet WP-PostViews Addons
  * Plugin URI: https://github.com/alexboia/AbNet-Wp-PostViews-AddOns
  * Description: Extends WP-PostViews with bot filtering based on the list in data/bots.json.
- * Version: 1.4.0
+ * Version: 1.5.0
  * Author: Alexandru Boia
  * Author URI: https://alexboia.net
  * Text Domain: abnet-wp-post-views-addons
