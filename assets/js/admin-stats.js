@@ -1,0 +1,37 @@
+(function () {
+	'use strict';
+
+	function sizeChart(container, itemSelector) {
+		var items = Array.prototype.slice.call(container.querySelectorAll(itemSelector));
+		var maximum = items.reduce(function (currentMaximum, item) {
+			return Math.max(currentMaximum, Number(item.dataset.value) || 0);
+		}, 0);
+
+		items.forEach(function (item) {
+			var value = Number(item.dataset.value) || 0;
+			var percentage = maximum > 0 ? (value / maximum) * 100 : 0;
+			item.style.setProperty('--abnet-stat-size', percentage + '%');
+		});
+	}
+
+	document.querySelectorAll('[data-abnet-stats]').forEach(function (chart) {
+		sizeChart(chart, '.abnet-visit-stats-bar-row');
+	});
+
+	document.querySelectorAll('[data-abnet-stats-tabs]').forEach(function (container) {
+		container.querySelectorAll('.abnet-visit-stats-daily-chart').forEach(function (chart) {
+			sizeChart(chart, '.abnet-visit-stats-day');
+		});
+
+		container.querySelectorAll('[role="tab"]').forEach(function (tab) {
+			tab.addEventListener('click', function () {
+				container.querySelectorAll('[role="tab"]').forEach(function (candidate) {
+					var isActive = candidate === tab;
+					candidate.classList.toggle('is-active', isActive);
+					candidate.setAttribute('aria-selected', isActive ? 'true' : 'false');
+					container.querySelector('#' + candidate.getAttribute('aria-controls')).hidden = !isActive;
+				});
+			});
+		});
+	});
+}());

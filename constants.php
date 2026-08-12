@@ -4,6 +4,7 @@ if (!defined('ABSPATH')) {
 }
 
 define('ABNET_WP_POST_VIEWS_VERSION', '1.5');
+define('ABNET_WP_POST_VIEWS_PLUGIN_FILE', __DIR__ . '/abnet-wp-post-views-addons.php');
 define('ABNET_WP_POST_VIEWS_INC_DIR', __DIR__ . '/includes/');
 define('ABNET_WP_POST_VIEWS_VIEWS_FILES_DIR', __DIR__ . '/views/');
 define('ABNET_WP_POST_VIEWS_DATA_DIR', __DIR__ . '/data/');

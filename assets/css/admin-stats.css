@@ -1,0 +1,93 @@
+.abnet-visit-stats {
+	--abnet-stats-color: #2271b1;
+	--abnet-stats-color-danger: #e14d43;
+	--abnet-stats-border: #c3c4c7;
+}
+
+.abnet-visit-stats-bar-row {
+	display: grid;
+	grid-template-columns: minmax(90px, auto) 1fr minmax(40px, auto);
+	gap: 10px;
+	align-items: center;
+	margin: 12px 0;
+}
+
+.abnet-visit-stats-track {
+	display: block;
+	height: 16px;
+	overflow: hidden;
+	background: #f0f0f1;
+	border-radius: 3px;
+}
+
+.abnet-visit-stats-bar,
+.abnet-visit-stats-column {
+	display: block;
+	background: var(--abnet-stats-color);
+}
+
+.abnet-visit-stats-bar-row.all_time_bots_vs_humans_is_bot .abnet-visit-stats-bar,
+.abnet-visit-stats-bots .abnet-visit-stats-column {
+	display: block;
+	background: var(--abnet-stats-color-danger);
+}
+
+.abnet-visit-stats-bar {
+	height: 100%;
+	width: var(--abnet-stat-size, 0%);
+	min-width: 2px;
+}
+
+.abnet-visit-stats-tabs {
+	display: flex;
+	gap: 4px;
+	border-bottom: 1px solid var(--abnet-stats-border);
+}
+
+.abnet-visit-stats-tab {
+	margin: 0 0 -1px;
+	padding: 8px 14px;
+	background: #f0f0f1;
+	border: 1px solid var(--abnet-stats-border);
+	cursor: pointer;
+}
+
+.abnet-visit-stats-tab.is-active {
+	background: #fff;
+	border-bottom-color: #fff;
+	font-weight: 600;
+}
+
+.abnet-visit-stats-tab:focus-visible {
+	outline: 2px solid var(--abnet-stats-color);
+	outline-offset: 1px;
+}
+
+.abnet-visit-stats-panel {
+	padding-top: 16px;
+}
+
+.abnet-visit-stats-daily-chart {
+	display: flex;
+	align-items: end;
+	gap: 3px;
+	height: 180px;
+	padding: 8px;
+	background: repeating-linear-gradient(to top, #f0f0f1 0, #f0f0f1 1px, transparent 1px, transparent 25%);
+	border-bottom: 1px solid var(--abnet-stats-border);
+}
+
+.abnet-visit-stats-day {
+	display: flex;
+	align-items: end;
+	flex: 1 1 0;
+	height: 100%;
+	min-width: 3px;
+}
+
+.abnet-visit-stats-column {
+	width: 100%;
+	height: var(--abnet-stat-size, 0%);
+	min-height: 2px;
+	border-radius: 2px 2px 0 0;
+}

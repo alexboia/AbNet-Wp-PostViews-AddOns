@@ -16,6 +16,8 @@ namespace ABNetWpPostViewsAddons {
 
 		private HoneyTrap $_honeyTrap;
 
+		private VisitStatsInfoManager $_visitStatsInfoManager;
+
 		/**
 		 * @return Plugin
 		 */
@@ -35,6 +37,7 @@ namespace ABNetWpPostViewsAddons {
 		private function __construct() {
 			$this->_dataSource = new Datasource();
 			$this->_honeyTrap = new HoneyTrap();
+			$this->_visitStatsInfoManager = new VisitStatsInfoManager();
 		}
 
 		public function run(): void {
@@ -43,7 +46,12 @@ namespace ABNetWpPostViewsAddons {
 				10);
 
 			add_filter( 'postviews_should_count', 
-				array( $this, 'filterPostviewsShouldCount' ), 
+				array($this, 'filterPostviewsShouldCount'), 
+				20, 
+				2 );
+
+			add_filter( 'wp_postviews_should_count', 
+				array($this, 'filterPostviewsShouldCount'), 
 				20, 
 				2 );
 
@@ -54,6 +62,7 @@ namespace ABNetWpPostViewsAddons {
 
 			$this->_getToolsIntegration()->init();
 			$this->_getHoneyTrap()->init();
+			$this->_visitStatsInfoManager->init();
 		}
 
 		public function onWpInit(): void {
