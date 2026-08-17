@@ -12,9 +12,11 @@ namespace ABNetWpPostViewsAddons {
 
 	final class HoneyTrap {
 		private Datasource $_dataSource;
+		private View $_view;
 		
-		public function __construct() {
-			$this->_dataSource = new Datasource();
+		public function __construct(Datasource|null $dataSource = null, View|null $view = null) {
+			$this->_dataSource = $dataSource ?? new Datasource();
+			$this->_view = $view ?? new View();
 		}
 
 		public function init(): void {
@@ -62,11 +64,7 @@ namespace ABNetWpPostViewsAddons {
 			$data->honeyTrapBaseUrl = home_url('/wpabnet/system-information');
 			$data->postId = $this->_getPostId();
 
-			$viewPath = ABNET_WP_POST_VIEWS_VIEWS_FILES_DIR 
-				. DIRECTORY_SEPARATOR 
-				. 'honey-trap.php';
-
-			require $viewPath;
+			$this->_view->render('honey-trap.php', array('data' => $data));
 		}
 
 		private function _getPostId(): int {
@@ -98,11 +96,7 @@ namespace ABNetWpPostViewsAddons {
 			status_header(200);
 			header('Content-Type: text/html');
 
-			$viewPath = ABNET_WP_POST_VIEWS_VIEWS_FILES_DIR 
-				. DIRECTORY_SEPARATOR 
-				. 'honey-trap-contents.php';
-
-			require $viewPath;
+			$this->_view->render('honey-trap-contents.php');
 			exit;
 		}
 

@@ -21,6 +21,12 @@ namespace ABNetWpPostViewsAddons {
 
 		private RefererPatternUpdater|null $_updater = null;
 
+		private View $_view;
+
+		public function __construct(View|null $view = null) {
+			$this->_view = $view ?? new View();
+		}
+
 		public function init(): void {
 			add_action('admin_menu', 
 				array( $this, 'registerToolsPage'));
@@ -55,15 +61,6 @@ namespace ABNetWpPostViewsAddons {
 				$activeTab = self::TAB_UPDATE;
 			}
 
-			$viewPath = ABNET_WP_POST_VIEWS_VIEWS_FILES_DIR 
-				. DIRECTORY_SEPARATOR 
-				. 'tools-page.php';
-
-			if (!file_exists($viewPath)) {
-				$this->_viewFileMissingError();
-				return;
-			}
-
 			$actionUrl = admin_url('admin-post.php');
 			$actionName = self::ACTION_UPDATE_BOTS;
 			
@@ -75,15 +72,21 @@ namespace ABNetWpPostViewsAddons {
 			$tabs = $this->_getTabs();
 			$botsJsonSections = $this->_getPresentableBotsJsonSections();
 
-			require $viewPath;
+			$this->_view->render('tools-page.php', array(
+				'status' => $status,
+				'activeTab' => $activeTab,
+				'actionUrl' => $actionUrl,
+				'actionName' => $actionName,
+				'nonceAction' => $nonceAction,
+				'nonceName' => $nonceName,
+				'lastSuccessfulUpdateMessage' => $lastSuccessfulUpdateMessage,
+				'tabs' => $tabs,
+				'botsJsonSections' => $botsJsonSections,
+			));
 		}
 
 		private function _isAuthorized(): bool {
 			return current_user_can('manage_options');
-		}
-
-		private function _viewFileMissingError(): void {
-			echo '<div class="notice notice-error"><p>' . esc_html__('View file missing.', 'abnet-wp-post-views-addons') . '</p></div>';
 		}
 
 		public function handleUpdateBotsAction(): void {

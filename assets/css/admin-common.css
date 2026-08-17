@@ -1,0 +1,48 @@
+.abnet-admin-master-detail-layout {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--abnet-master-detail-gap, 20px);
+}
+
+.abnet-admin-master-detail-layout.has-detail {
+	grid-template-columns: minmax(280px, 3fr) minmax(0, 7fr);
+}
+
+.abnet-admin-master-detail-master,
+.abnet-admin-master-detail-detail {
+	min-width: 0;
+}
+
+.abnet-admin-modal {
+	position: fixed;
+	inset: 0;
+	z-index: 100000;
+}
+
+.abnet-admin-modal-backdrop {
+	position: absolute;
+	inset: 0;
+}
+
+.abnet-admin-modal-dialog {
+	position: absolute;
+	top: 20px;
+	bottom: 20px;
+	left: 50%;
+	width: min(var(--abnet-admin-modal-width, 600px), calc(100% - 40px));
+	box-sizing: border-box;
+	overflow-y: auto;
+	transform: translateX(-50%);
+}
+
+.abnet-admin-modal-close {
+	position: absolute;
+	top: 8px;
+	right: 10px;
+}
+
+@media (max-width: 960px) {
+	.abnet-admin-master-detail-layout.has-detail {
+		grid-template-columns: 1fr;
+	}
+}

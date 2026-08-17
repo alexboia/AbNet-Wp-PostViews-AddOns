@@ -1,0 +1,87 @@
+.abnet-honey-trap-layout.has-detail {
+	grid-template-columns: minmax(280px, 3fr) minmax(0, 7fr);
+}
+
+.abnet-honey-trap-master,
+.abnet-honey-trap-detail {
+	padding: 16px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+}
+
+.abnet-honey-trap-loading {
+	display: flex;
+	justify-content: center;
+	min-height: 80px;
+	padding-top: 30px;
+}
+
+.abnet-honey-trap-table-scroll {
+	overflow-x: auto;
+}
+
+.abnet-honey-trap-layout.has-detail .abnet-honey-trap-master code {
+	display: inline-block;
+	max-width: 120px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.abnet-honey-trap-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.abnet-honey-trap-detail-heading {
+	display: flex;
+	justify-content: space-between;
+	gap: 16px;
+	align-items: start;
+	margin-bottom: 8px;
+}
+
+.abnet-honey-trap-detail-heading h2 {
+	margin-top: 0;
+}
+
+.abnet-honey-trap-detail-heading code {
+	margin-left: 0px;
+	margin-top: 0px;
+	padding: 4px;
+}
+
+.abnet-honey-trap-wrap {
+	max-width: 300px;
+	overflow-wrap: anywhere;
+}
+
+.abnet-honey-trap .tablenav-pages {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.abnet-honey-trap-modal {
+	--abnet-admin-modal-width: 600px;
+}
+
+.abnet-honey-trap-modal-backdrop {
+	background: rgb(0 0 0 / 55%);
+}
+
+.abnet-honey-trap-modal-dialog {
+	padding: 24px;
+	background: #fff;
+	box-shadow: 0 3px 20px rgb(0 0 0 / 35%);
+}
+
+.abnet-honey-trap-modal-close {
+	padding: 0;
+	background: transparent;
+	border: 0;
+	font-size: 28px;
+	line-height: 1;
+	cursor: pointer;
+}

@@ -18,6 +18,10 @@ namespace ABNetWpPostViewsAddons {
 
 		private VisitStatsInfoManager $_visitStatsInfoManager;
 
+		private HoneyTrapManager $_honeyTrapManager;
+
+		private View $_view;
+
 		/**
 		 * @return Plugin
 		 */
@@ -36,12 +40,17 @@ namespace ABNetWpPostViewsAddons {
 
 		private function __construct() {
 			$this->_dataSource = new Datasource();
-			$this->_honeyTrap = new HoneyTrap();
-			$this->_visitStatsInfoManager = new VisitStatsInfoManager();
+			$this->_view = new View();
+			$this->_honeyTrap = new HoneyTrap($this->_dataSource, $this->_view);
+			$this->_visitStatsInfoManager = new VisitStatsInfoManager(null, $this->_view);
+			$this->_honeyTrapManager = new HoneyTrapManager($this->_dataSource, $this->_view);
 		}
 
 		public function run(): void {
-			add_action('init', 
+			add_action('admin_enqueue_scripts',
+				array($this, 'enqueueAdminCommonAssets'));
+
+			add_action('init',
 				array($this, 'onWpInit'), 
 				10);
 
@@ -63,6 +72,16 @@ namespace ABNetWpPostViewsAddons {
 			$this->_getToolsIntegration()->init();
 			$this->_getHoneyTrap()->init();
 			$this->_visitStatsInfoManager->init();
+			$this->_honeyTrapManager->init();
+		}
+
+		public function enqueueAdminCommonAssets(): void {
+			wp_enqueue_style(
+				'abnet-wp-post-views-admin-common',
+				plugins_url('assets/css/admin-common.css', ABNET_WP_POST_VIEWS_PLUGIN_FILE),
+				array(),
+				ABNET_WP_POST_VIEWS_VERSION
+			);
 		}
 
 		public function onWpInit(): void {
@@ -177,7 +196,7 @@ namespace ABNetWpPostViewsAddons {
 		 */
 		private function _getToolsIntegration(): ToolsIntegration {
 			if (null === $this->_toolsIntegration) {
-				$this->_toolsIntegration = new ToolsIntegration();
+				$this->_toolsIntegration = new ToolsIntegration($this->_view);
 			}
 
 			return $this->_toolsIntegration;

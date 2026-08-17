@@ -12,9 +12,11 @@ namespace ABNetWpPostViewsAddons {
 		private const POST_META_BOX_ID = 'abnet-wp-post-views-post-stats';
 
 		private VisitStatsInfoDataSource $_dataSource;
+		private View $_view;
 
-		public function __construct(VisitStatsInfoDataSource|null $dataSource = null) {
+		public function __construct(VisitStatsInfoDataSource|null $dataSource = null, View|null $view = null) {
 			$this->_dataSource = $dataSource ?? new VisitStatsInfoDataSource();
+			$this->_view = $view ?? new View();
 		}
 
 		public function init(): void {
@@ -78,7 +80,7 @@ namespace ABNetWpPostViewsAddons {
 
 		public function renderDashboardWidget(): void {
 			$stats = $this->_dataSource->getAllTimeBotVsHumanStats();
-			$this->_renderView('dashboard-visit-stats.php', 
+			$this->_view->render('dashboard-visit-stats.php', 
 				array('stats' => $stats));
 		}
 
@@ -86,21 +88,11 @@ namespace ABNetWpPostViewsAddons {
 			$botStats = $this->_dataSource->getPostStats((int)$post->ID, true);
 			$humanStats = $this->_dataSource->getPostStats((int)$post->ID, false);
 
-			$this->_renderView('post-visit-stats.php', array(
+			$this->_view->render('post-visit-stats.php', array(
 				'botStats' => $botStats,
 				'humanStats' => $humanStats,
 			));
 		}
 
-		private function _renderView(string $fileName, array $variables): void {
-			$viewPath = ABNET_WP_POST_VIEWS_VIEWS_FILES_DIR . $fileName;
-			if (!is_file($viewPath)) {
-				echo '<p>' . esc_html__('Statistics view is unavailable.', 'abnet-wp-post-views-addons') . '</p>';
-				return;
-			}
-
-			extract($variables, EXTR_SKIP);
-			require $viewPath;
-		}
 	}
 }

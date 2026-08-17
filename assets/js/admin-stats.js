@@ -1,7 +1,7 @@
 (function () {
 	'use strict';
 
-	function sizeChart(container, itemSelector) {
+	function sizeDashboardChart(container, itemSelector) {
 		var items = Array.prototype.slice.call(container.querySelectorAll(itemSelector));
 		var maximum = items.reduce(function (currentMaximum, item) {
 			return Math.max(currentMaximum, Number(item.dataset.value) || 0);
@@ -15,13 +15,18 @@
 	}
 
 	document.addEventListener("DOMContentLoaded", function() {
+		//For the time being it is cheap enough so that 
+		// we indiscriminately search for elements belonging 
+		// to both pages:
+		//	- Dashboard stats
 		document.querySelectorAll('[data-abnet-stats]').forEach(function (chart) {
-			sizeChart(chart, '.abnet-visit-stats-bar-row');
+			sizeDashboardChart(chart, '.abnet-visit-stats-bar-row');
 		});
 
+		// - And post edit stats
 		document.querySelectorAll('[data-abnet-stats-tabs]').forEach(function (container) {
 			container.querySelectorAll('.abnet-visit-stats-daily-chart').forEach(function (chart) {
-				sizeChart(chart, '.abnet-visit-stats-day');
+				sizeDashboardChart(chart, '.abnet-visit-stats-day');
 			});
 
 			container.querySelectorAll('[role="tab"]').forEach(function (tab) {
