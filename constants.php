@@ -3,7 +3,7 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
-define('ABNET_WP_POST_VIEWS_VERSION', '1.5.0');
+define('ABNET_WP_POST_VIEWS_VERSION', '1.5.1');
 define('ABNET_WP_POST_VIEWS_PLUGIN_FILE', __DIR__ . '/abnet-wp-post-views-addons.php');
 define('ABNET_WP_POST_VIEWS_INC_DIR', __DIR__ . '/includes/');
 define('ABNET_WP_POST_VIEWS_VIEWS_FILES_DIR', __DIR__ . '/views/');
