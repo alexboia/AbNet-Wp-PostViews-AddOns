@@ -8,14 +8,21 @@ namespace ABNetWpPostViewsAddons {
 
 	final class HoneyTrapManager {
 		private const string PAGE_SLUG = 'abnet-honey-trapped-bots';
-		private const string AJAX_MASTER = 'abnet_honey_trap_master';
-		private const string AJAX_DETAIL = 'abnet_honey_trap_detail';
-		private const string AJAX_IP_ADDRESSES = 'abnet_honey_trap_ip_addresses';
+		
+		private const string AJAX_MASTER_TRAPPED_BOTS_GROUPS = 'abnet_honey_trap_master';
+		
+		private const string AJAX_DETAIL_TRAPPED_BOTS_LIST = 'abnet_honey_trap_detail';
+		
+		private const string AJAX_TRAPPED_BOTS_GROUP_IP_ADDRESSES = 'abnet_honey_trap_ip_addresses';
+		
 		private const string NONCE_ACTION = 'abnet_honey_trap_admin';
+
 		private const int PAGE_SIZE = 30;
 
 		private Datasource $_dataSource;
+
 		private string $_pageHook = '';
+
 		private View $_view;
 
 		public function __construct(Datasource|null $dataSource = null, View|null $view = null) {
@@ -24,11 +31,16 @@ namespace ABNetWpPostViewsAddons {
 		}
 
 		public function init(): void {
-			add_action('admin_menu', array($this, 'registerAdminPage'));
-			add_action('admin_enqueue_scripts', array($this, 'enqueueAdminAssets'));
-			add_action('wp_ajax_' . self::AJAX_MASTER, array($this, 'ajaxMaster'));
-			add_action('wp_ajax_' . self::AJAX_DETAIL, array($this, 'ajaxDetail'));
-			add_action('wp_ajax_' . self::AJAX_IP_ADDRESSES, array($this, 'ajaxIpAddresses'));
+			add_action('admin_menu', 
+				array($this, 'registerAdminPage'));
+			add_action('admin_enqueue_scripts', 
+				array($this, 'enqueueAdminAssets'));
+			add_action('wp_ajax_' . self::AJAX_MASTER_TRAPPED_BOTS_GROUPS, 
+				array($this, 'ajaxListTrappedBotGroups'));
+			add_action('wp_ajax_' . self::AJAX_DETAIL_TRAPPED_BOTS_LIST, 
+				array($this, 'ajaxListTrappedBotsForGroup'));
+			add_action('wp_ajax_' . self::AJAX_TRAPPED_BOTS_GROUP_IP_ADDRESSES, 
+				array($this, 'ajaxListTrapepdBotGroupIpAddresses'));
 		}
 
 		public function registerAdminPage(): void {
@@ -47,23 +59,30 @@ namespace ABNetWpPostViewsAddons {
 			}
 
 			wp_enqueue_style('abnet-honey-trap-admin',
-				plugins_url('assets/css/admin-honey-trap.css', ABNET_WP_POST_VIEWS_PLUGIN_FILE),
-				array('abnet-wp-post-views-admin-common'), ABNET_WP_POST_VIEWS_VERSION);
+				plugins_url('assets/css/admin-honey-trap.css', 
+					ABNET_WP_POST_VIEWS_PLUGIN_FILE),
+				array('abnet-wp-post-views-admin-common'), 
+				ABNET_WP_POST_VIEWS_VERSION);
 
 			wp_enqueue_script('abnet-honey-trap-admin',
-				plugins_url('assets/js/admin-honey-trap.js', ABNET_WP_POST_VIEWS_PLUGIN_FILE),
-				array(), ABNET_WP_POST_VIEWS_VERSION, true);
+				plugins_url('assets/js/admin-honey-trap.js', 
+					ABNET_WP_POST_VIEWS_PLUGIN_FILE),
+				array(), 
+				ABNET_WP_POST_VIEWS_VERSION, 
+				true);
 
-			wp_localize_script('abnet-honey-trap-admin', 'abnetHoneyTrapAdmin', array(
-				'ajaxUrl' => admin_url('admin-ajax.php'),
-				'nonce' => wp_create_nonce(self::NONCE_ACTION),
-				'actions' => array(
-					'master' => self::AJAX_MASTER,
-					'detail' => self::AJAX_DETAIL,
-					'ipAddresses' => self::AJAX_IP_ADDRESSES,
-				),
-				'errorMessage' => __('The requested data could not be loaded.', 'abnet-wp-post-views-addons'),
-			));
+			wp_localize_script('abnet-honey-trap-admin', 
+				'abnetHoneyTrapAdmin', array(
+					'ajaxUrl' => admin_url('admin-ajax.php'),
+					'nonce' => wp_create_nonce(self::NONCE_ACTION),
+					'actions' => array(
+						'master' => self::AJAX_MASTER_TRAPPED_BOTS_GROUPS,
+						'detail' => self::AJAX_DETAIL_TRAPPED_BOTS_LIST,
+						'ipAddresses' => self::AJAX_TRAPPED_BOTS_GROUP_IP_ADDRESSES,
+					),
+					'errorMessage' => __('The requested data could not be loaded.', 'abnet-wp-post-views-addons'),
+				)
+			);
 		}
 
 		public function renderAdminPage(): void {
@@ -71,7 +90,7 @@ namespace ABNetWpPostViewsAddons {
 			$this->_view->render('honey-trapped-bots-page.php');
 		}
 
-		public function ajaxMaster(): void {
+		public function ajaxListTrappedBotGroups(): void {
 			$this->_verifyAjaxRequest();
 			$page = $this->_getPageFromRequest();
 
@@ -91,29 +110,38 @@ namespace ABNetWpPostViewsAddons {
 			));
 		}
 
-		public function ajaxDetail(): void {
+		public function ajaxListTrappedBotsForGroup(): void {
 			$this->_verifyAjaxRequest();
+
 			$group = $this->_getGroupFromRequest();
 			$page = $this->_getPageFromRequest();
+
 			$bots = $this->_dataSource->getHoneyTrappedBotsByGroup(
-				$group, ($page - 1) * self::PAGE_SIZE, self::PAGE_SIZE + 1);
+				$group, ($page - 1) * self::PAGE_SIZE, 
+				self::PAGE_SIZE + 1
+			);
+
 			$hasNextPage = count($bots) > self::PAGE_SIZE;
 
-			$this->_sendView('honey-trapped-bots-detail.php', array(
-				'group' => $group,
-				'bots' => array_slice($bots, 0, self::PAGE_SIZE),
-				'page' => $page,
-				'hasNextPage' => $hasNextPage,
-			));
+			$this->_sendView('honey-trapped-bots-detail.php', 
+				array(
+					'group' => $group,
+					'bots' => array_slice($bots, 0, self::PAGE_SIZE),
+					'page' => $page,
+					'hasNextPage' => $hasNextPage,
+				)
+			);
 		}
 
-		public function ajaxIpAddresses(): void {
+		public function ajaxListTrapepdBotGroupIpAddresses(): void {
 			$this->_verifyAjaxRequest();
 			$signature = $this->_getSignatureFromRequest();
-			$this->_sendView('honey-trapped-bots-ip-addresses.php', array(
-				'signature' => $signature,
-				'ipAddresses' => $this->_dataSource->getHoneyTrappedIpAddressesBySignature($signature),
-			));
+			$this->_sendView('honey-trapped-bots-ip-addresses.php', 
+				array(
+					'signature' => $signature,
+					'ipAddresses' => $this->_dataSource->getHoneyTrappedIpAddressesBySignature($signature),
+				)
+			);
 		}
 
 		private function _verifyAjaxRequest(): void {

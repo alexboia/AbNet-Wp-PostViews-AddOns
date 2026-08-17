@@ -1,5 +1,8 @@
 <?php
 /** @var \ABNetWpPostViewsAddons\HoneyTrappedBotGroup[] $groups */
+/** @var int $page */
+/** @var bool $hasNextPage */
+
 if (!defined('ABSPATH')) {
 	exit;
 }
@@ -33,7 +36,11 @@ if (!defined('ABSPATH')) {
 	</div>
 <?php endif; ?>
 <div class="tablenav bottom"><div class="tablenav-pages">
-	<?php if ($page > 1): ?><button type="button" class="button" data-master-page="<?php echo esc_attr((string)($page - 1)); ?>">&lsaquo; <?php echo esc_html__('Previous', 'abnet-wp-post-views-addons'); ?></button><?php endif; ?>
+	<?php if ($page > 1): ?>
+		<button type="button" class="button" data-master-page="<?php echo esc_attr((string)($page - 1)); ?>">&lsaquo; <?php echo esc_html__('Previous', 'abnet-wp-post-views-addons'); ?></button>
+	<?php endif; ?>
 	<span class="paging-input"><?php echo esc_html(sprintf(__('Page %d', 'abnet-wp-post-views-addons'), $page)); ?></span>
-	<?php if ($hasNextPage): ?><button type="button" class="button" data-master-page="<?php echo esc_attr((string)($page + 1)); ?>"><?php echo esc_html__('Next', 'abnet-wp-post-views-addons'); ?> &rsaquo;</button><?php endif; ?>
+	<?php if ($hasNextPage): ?>
+		<button type="button" class="button" data-master-page="<?php echo esc_attr((string)($page + 1)); ?>"><?php echo esc_html__('Next', 'abnet-wp-post-views-addons'); ?> &rsaquo;</button>
+	<?php endif; ?>
 </div></div>
