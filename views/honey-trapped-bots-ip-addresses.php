@@ -7,7 +7,9 @@ if (!defined('ABSPATH')) {
 }
 ?>
 <h2 id="abnet-honey-trap-modal-title"><?php echo esc_html__('IP addresses', 'abnet-wp-post-views-addons'); ?></h2>
-<p><code><?php echo esc_html($signature); ?></code></p>
+<p class="abnet-honey-trap-modal-bot-signature">
+	<code><?php echo esc_html($signature); ?></code>
+</p>
 <?php if (empty($ipAddresses)): ?>
 	<p><?php echo esc_html__('No IP addresses were found for this signature.', 'abnet-wp-post-views-addons'); ?></p>
 <?php else: ?>
