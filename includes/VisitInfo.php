@@ -52,6 +52,14 @@ namespace ABNetWpPostViewsAddons {
 
 		public const string KEY_ACCEPT_CONTENT = 'accept_content';
 
+		public const string KEY_SEC_FETCH_MODE = 'sec_fetch_mode';
+
+		public const string KEY_SEC_FETCH_SITE = 'sec_fetch_site';
+
+		public const string KEY_SEC_FETCH_DEST = 'sec_fetch_dest';
+
+		public const string KEY_SEC_CH_UA = 'sec_ch_ua';
+
 		public const string KEY_CF_IP_COUNTRY = 'cf_ip_country';
 
 		public const string KEY_CF_IP_AS_NAME = 'cf_ip_as_name';
@@ -123,6 +131,14 @@ namespace ABNetWpPostViewsAddons {
 		private string|null $_utmContent;
 
 		private string|null $_acceptContent;
+
+		private string|null $_secFetchMode;
+
+		private string|null $_secFetchSite;
+
+		private string|null $_secFetchDest;
+
+		private string|null $_secChUa;
 
 		//private string|null $_xForwardedFor;
 
@@ -225,6 +241,22 @@ namespace ABNetWpPostViewsAddons {
 				? (string)$info[self::KEY_ACCEPT_CONTENT]
 				: null;
 
+			$this->_secFetchMode = !empty($info[self::KEY_SEC_FETCH_MODE])
+				? (string)$info[self::KEY_SEC_FETCH_MODE]
+				: null;
+
+			$this->_secFetchSite = !empty($info[self::KEY_SEC_FETCH_SITE])
+				? (string)$info[self::KEY_SEC_FETCH_SITE]
+				: null;
+
+			$this->_secFetchDest = !empty($info[self::KEY_SEC_FETCH_DEST])
+				? (string)$info[self::KEY_SEC_FETCH_DEST]
+				: null;
+
+			$this->_secChUa = !empty($info[self::KEY_SEC_CH_UA])
+				? (string)$info[self::KEY_SEC_CH_UA]
+				: null;
+
 			$this->_cfIpCountry = !empty($info[self::KEY_CF_IP_COUNTRY])
 				? (string)$info[self::KEY_CF_IP_COUNTRY]
 				: null;
@@ -309,6 +341,10 @@ namespace ABNetWpPostViewsAddons {
 				self::KEY_UTM_TERM => $this->_utmTerm,
 				self::KEY_UTM_CONTENT => $this->_utmContent,
 				self::KEY_ACCEPT_CONTENT => $this->_acceptContent,
+				self::KEY_SEC_FETCH_MODE => $this->_secFetchMode,
+				self::KEY_SEC_FETCH_SITE => $this->_secFetchSite,
+				self::KEY_SEC_FETCH_DEST => $this->_secFetchDest,
+				self::KEY_SEC_CH_UA => $this->_secChUa,
 				self::KEY_CF_IP_COUNTRY => $this->_cfIpCountry,
 				self::KEY_CF_IP_AS_NAME => $this->_cfIpAsName,
 				self::KEY_COMPUTED_COUNTRY => $this->_computedCountry,
@@ -454,6 +490,28 @@ namespace ABNetWpPostViewsAddons {
 
 		public function getAcceptContent(): string|null {
 			return $this->_acceptContent;
+		}
+
+		public function getSecFetchMode(): string|null {
+			return $this->_secFetchMode;
+		}
+
+		public function getSecFetchSite(): string|null {
+			return $this->_secFetchSite;
+		}
+
+		public function getSecFetchDest(): string|null {
+			return $this->_secFetchDest;
+		}
+
+		public function getSecChUa(): string|null {
+			return $this->_secChUa;
+		}
+
+		public function hasSecFetchHeaders(): bool {
+			return !empty($this->_secFetchMode)
+				|| !empty($this->_secFetchSite)
+				|| !empty($this->_secFetchDest);
 		}
 
 		public function getCfIpCountry(): string|null {

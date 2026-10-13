@@ -7,6 +7,85 @@ namespace ABNetWpPostViewsAddons {
 	}
 
 	final class FuzzyBotScoreCalculator {
+		//Chrome 120 went stable on 2023-12-05;
+		//	since then a new major version every ~31.5 days
+		private const int CHROME_REFERENCE_VERSION = 120;
+
+		private const string CHROME_REFERENCE_DATE = '2023-12-05';
+
+		private const float CHROME_DAYS_PER_VERSION = 31.5;
+
+		private const int CHROME_STALE_VERSION_DISTANCE = 24;
+
+		private const int CHROME_FUTURE_VERSION_DISTANCE = 8;
+
+		private const array HOSTING_ASN_WEIGHTS = array(
+			16509 => 10,	//Amazon (AWS)
+			14618 => 10,	//Amazon (AWS)
+			396982 => 10,	//Google Cloud
+			8075 => 10,		//Microsoft (Azure)
+			31898 => 12,	//Oracle Cloud
+			24940 => 12,	//Hetzner
+			213230 => 12,	//Hetzner Cloud
+			16276 => 12,	//OVH
+			14061 => 12,	//DigitalOcean
+			63949 => 12,	//Linode (Akamai)
+			45102 => 12,	//Alibaba Cloud
+			132203 => 12,	//Tencent Cloud
+			136907 => 12,	//Huawei Cloud
+			51167 => 12,	//Contabo
+			60781 => 12,	//Leaseweb
+			12876 => 12,	//Scaleway
+			20473 => 12,	//Vultr (Choopa)
+			9009 => 15,		//M247 (VPN/proxy heavy)
+			212238 => 15,	//Datacamp (VPN/proxy heavy)
+		);
+
+		private const array HOSTING_NETWORK_TOKEN_WEIGHTS = array(
+			'datacenter' => 12,
+			'data center' => 12,
+			'hosting' => 10,
+			'vps' => 10,
+			'proxy' => 15,
+			'vpn' => 12,
+			'amazon' => 10,
+			'aws' => 10,
+			'google cloud' => 10,
+			'microsoft azure' => 10,
+			'microsoft corp msn' => 10,
+			'digitalocean' => 12,
+			'hetzner' => 12,
+			'ovh' => 12,
+			'linode' => 12,
+			'akamai' => 8,
+			'tencent' => 12,
+			'alibaba' => 12,
+			'hwclouds' => 12,
+			'oracle cloud' => 12,
+			'oracle bmc' => 12,
+			'leaseweb' => 12,
+			'contabo' => 12,
+			'scaleway' => 12,
+			'vultr' => 12,
+			'choopa' => 12,
+			'm247' => 15,
+			'datacamp' => 15,
+		);
+
+		private const array SEARCH_ENGINE_HOSTS = array(
+			'google.',
+			'bing.com',
+			'duckduckgo.com',
+			'search.yahoo.com',
+			'yandex.',
+			'ecosia.org',
+			'search.brave.com',
+			'startpage.com',
+			'qwant.com',
+			'kagi.com',
+			'baidu.com',
+		);
+
 		public function calculate(VisitInfo $visitInfo): FuzzyBotScore {
 			$score = 0;
 			$signals = array();
@@ -17,10 +96,18 @@ namespace ABNetWpPostViewsAddons {
 				return new FuzzyBotScore($score, $signals);
 			}
 
-			$userAgentScore = $this->_scoreUserAgent($visitInfo->getUserAgent());
+			$referenceTime = $this->_getReferenceTime($visitInfo);
+			$userAgentScore = $this->_scoreUserAgent($visitInfo->getUserAgent(),
+				$referenceTime);
 			if ($userAgentScore !== 0) {
 				$signals['user_agent'] = $userAgentScore;
 				$score += $userAgentScore;
+			}
+
+			$browserHeadersScore = $this->_scoreBrowserHeaders($visitInfo);
+			if ($browserHeadersScore !== 0) {
+				$signals['browser_headers'] = $browserHeadersScore;
+				$score += $browserHeadersScore;
 			}
 
 			$acceptScore = $this->_scoreAcceptContent($visitInfo->getAcceptContent());
@@ -34,8 +121,10 @@ namespace ABNetWpPostViewsAddons {
 				$score += 10;
 			} else {
 				$languageScore = $this->_scoreLanguage($visitInfo);
-				$signals['accept_language'] = $languageScore;
-				$score += $languageScore;
+				if ($languageScore !== 0) {
+					$signals['accept_language'] = $languageScore;
+					$score += $languageScore;
+				}
 			}
 
 			$requestMethodScore = $this->_scoreRequestMethod($visitInfo->getRequestMethod());
@@ -73,11 +162,35 @@ namespace ABNetWpPostViewsAddons {
 				$score += $networkScore;
 			}
 
+			//A desktop/mobile browser coming from a hosting network
+			//	is rarely a human (VPNs aside)
+			if ($this->_getHostingNetworkWeight($visitInfo) > 0
+				&& $this->_claimsToBeBrowser($visitInfo->getUserAgent())) {
+				$signals['browser_from_hosting'] = 20;
+				$score += 20;
+			}
+
 			return new FuzzyBotScore($score, $signals);
 
 		}
 
+		private function _getReferenceTime(VisitInfo $visitInfo): int {
+			//Use the visit time, not the current time,
+			//	so that re-processing old visits yields the same score
+			$timestamp = $visitInfo->getTimestamp();
+			if (!empty($timestamp)) {
+				$time = strtotime($timestamp . ' UTC');
+				if ($time !== false) {
+					return $time;
+				}
+			}
+
+			return time();
+		}
+
 		private function _scoreLanguage(VisitInfo $visitInfo): int {
+			//VisitInfoCollector only keeps the first language range
+			//	(e.g. "zh-CN" out of "zh-CN,zh;q=0.9,en;q=0.8")
 			$language = $visitInfo->getLanguage();
 			if (empty($language)) {
 				return 0;
@@ -101,7 +214,7 @@ namespace ABNetWpPostViewsAddons {
 			return 0;
 		}
 
-		private function _scoreUserAgent(string|null $userAgent): int {
+		private function _scoreUserAgent(string|null $userAgent, int $referenceTime): int {
 			if (empty($userAgent)) {
 				return 35;
 			}
@@ -111,7 +224,7 @@ namespace ABNetWpPostViewsAddons {
 				return 35;
 			}
 
-			if (false !== stripos($normalizedUserAgent, 'Macintosh') 
+			if (false !== stripos($normalizedUserAgent, 'Macintosh')
 				&& $this->_isSafariLike($normalizedUserAgent)) {
 				//Structural check. Real modern Safari contains "AppleWebKit" and "Version/"
 				if (false === stripos($normalizedUserAgent, 'Version/')) {
@@ -119,19 +232,21 @@ namespace ABNetWpPostViewsAddons {
 				}
 			}
 
-			// Check for ancient Chrome/Chromium versions 
+			// Check for ancient Chrome/Chromium versions
 			//	used by headless tools (e.g., Chrome/87, Chrome/80)
-        	if (preg_match('/Chrome\/([0-9]+)\./i', $normalizedUserAgent, $matches)) {
-				$chromeVersion = (int) $matches[1];
+			$chromeVersion = $this->_getChromeMajorVersion($normalizedUserAgent);
+			if ($chromeVersion > 0) {
+				$currentChromeVersion = $this->_estimateCurrentChromeMajorVersion($referenceTime);
+
 				if ($chromeVersion < 70) {
 					return 45;
 				}
 
-				if ($chromeVersion < 100) {
+				if ($chromeVersion < $currentChromeVersion - self::CHROME_STALE_VERSION_DISTANCE) {
 					return 25;
 				}
 
-				if ($chromeVersion > 190) {
+				if ($chromeVersion > $currentChromeVersion + self::CHROME_FUTURE_VERSION_DISTANCE) {
 					return 25; // future fantasy
 				}
 			}
@@ -143,10 +258,109 @@ namespace ABNetWpPostViewsAddons {
 				return 45;
 			}
 
-			if (false !== stripos($normalizedUserAgent, 'Windows NT 6.1') 
-				|| false !== stripos($normalizedUserAgent, 'Windows NT 6.2') 
+			if (false !== stripos($normalizedUserAgent, 'Windows NT 6.1')
+				|| false !== stripos($normalizedUserAgent, 'Windows NT 6.2')
 				|| false !== stripos($normalizedUserAgent, 'Windows NT 6.3')) {
 				return 25;
+			}
+
+			return 0;
+		}
+
+		private function _estimateCurrentChromeMajorVersion(int $referenceTime): int {
+			$referenceDate = strtotime(self::CHROME_REFERENCE_DATE . ' 00:00:00 UTC');
+			$elapsedDays = max(0, ($referenceTime - $referenceDate) / 86400);
+
+			return self::CHROME_REFERENCE_VERSION
+				+ (int)floor($elapsedDays / self::CHROME_DAYS_PER_VERSION);
+		}
+
+		private function _getChromeMajorVersion(string $userAgent): int {
+			if (preg_match('/Chrome\/([0-9]+)\./i', $userAgent, $matches)) {
+				return (int)$matches[1];
+			}
+
+			return 0;
+		}
+
+		private function _getFirefoxMajorVersion(string $userAgent): int {
+			if (preg_match('/Firefox\/([0-9]+)\./i', $userAgent, $matches)) {
+				return (int)$matches[1];
+			}
+
+			return 0;
+		}
+
+		private function _getSafariMajorVersion(string $userAgent): int {
+			if ($this->_isSafariLike($userAgent)
+				&& preg_match('/Version\/([0-9]+)\./i', $userAgent, $matches)) {
+				return (int)$matches[1];
+			}
+
+			return 0;
+		}
+
+		private function _claimsToBeBrowser(string|null $userAgent): bool {
+			if (empty($userAgent)) {
+				return false;
+			}
+
+			$normalizedUserAgent = strtolower(trim($userAgent));
+			return str_starts_with($normalizedUserAgent, 'mozilla/5.0')
+				&& (str_contains($normalizedUserAgent, 'chrome/')
+					|| str_contains($normalizedUserAgent, 'firefox/')
+					|| str_contains($normalizedUserAgent, 'safari/'));
+		}
+
+		private function _scoreBrowserHeaders(VisitInfo $visitInfo): int {
+			//Modern browsers always send Sec-Fetch-* headers
+			//	(Chrome 76+, Firefox 90+, Safari 16.4+), and Chromium 89+
+			//	also sends Sec-CH-UA over HTTPS. Many scrapers fake
+			//	a browser User-Agent, but not these.
+			$userAgent = $visitInfo->getUserAgent();
+			if (!$this->_claimsToBeBrowser($userAgent)) {
+				return 0;
+			}
+
+			$normalizedUserAgent = strtolower(trim($userAgent));
+			$chromeVersion = $this->_getChromeMajorVersion($normalizedUserAgent);
+			$secChUa = strtolower(trim((string)$visitInfo->getSecChUa()));
+
+			if (!$visitInfo->hasSecFetchHeaders()) {
+				if ($chromeVersion >= 90) {
+					return 40;
+				}
+
+				if ($this->_getFirefoxMajorVersion($normalizedUserAgent) >= 90) {
+					return 35;
+				}
+
+				if ($this->_getSafariMajorVersion($normalizedUserAgent) >= 17) {
+					return 30;
+				}
+
+				return 0;
+			}
+
+			if (!empty($secChUa)) {
+				if (str_contains($secChUa, 'headless')) {
+					return 40;
+				}
+
+				//User-Agent says Chrome/X, client hints say Chromium Y
+				$hintedVersion = $this->_getChromiumVersionFromClientHints($secChUa);
+				if ($chromeVersion > 0 && $hintedVersion > 0 && $chromeVersion !== $hintedVersion) {
+					return 20;
+				}
+			}
+
+			return -3;
+		}
+
+		private function _getChromiumVersionFromClientHints(string $secChUa): int {
+			//e.g. "Chromium";v="141", "Google Chrome";v="141", "Not?A_Brand";v="8"
+			if (preg_match('/"chromium";\s*v="([0-9]+)"/i', $secChUa, $matches)) {
+				return (int)$matches[1];
 			}
 
 			return 0;
@@ -229,7 +443,11 @@ namespace ABNetWpPostViewsAddons {
 			}
 
 			if ($this->_isRefererSameAsTargetUrl($visitInfo)) {
-				return 20;
+				//Comment submissions redirect back to the post with the post
+				//	itself as referer, so don't penalize those
+				return $this->_isLikelyCommentRoundTrip($visitInfo)
+					? 0
+					: 20;
 			}
 
 			if ($visitInfo->isRefererLocal()) {
@@ -240,7 +458,46 @@ namespace ABNetWpPostViewsAddons {
 				return -10;
 			}
 
+			//Search engines no longer pass the search terms along,
+			//	so look at the referer host instead
+			if ($this->_isSearchEngineReferer($referer)) {
+				return -10;
+			}
+
 			return 0;
+		}
+
+		private function _isLikelyCommentRoundTrip(VisitInfo $visitInfo): bool {
+			$cookies = strtolower($visitInfo->getCookies());
+			if (str_contains($cookies, 'comment_author_')
+				|| str_contains($cookies, 'wordpress_logged_in_')) {
+				return true;
+			}
+
+			return $visitInfo->hasSecFetchHeaders()
+				&& strtolower((string)$visitInfo->getSecFetchSite()) === 'same-origin';
+		}
+
+		private function _isSearchEngineReferer(string $referer): bool {
+			$refererHost = parse_url($referer, PHP_URL_HOST);
+			if (!is_string($refererHost) || empty($refererHost)) {
+				return false;
+			}
+
+			$refererHost = strtolower($refererHost);
+			foreach (self::SEARCH_ENGINE_HOSTS as $searchEngineHost) {
+				$hostMatches = str_ends_with($searchEngineHost, '.')
+					//e.g. google. matches www.google.com, google.ro, but not google.example.com
+					? preg_match('/(^|\.)' . preg_quote($searchEngineHost, '/') . '[a-z]{2,3}(\.[a-z]{2})?$/', $refererHost) === 1
+					: ($refererHost === $searchEngineHost
+						|| str_ends_with($refererHost, '.' . $searchEngineHost));
+
+				if ($hostMatches) {
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		private function _isRefererSameAsTargetUrl(VisitInfo $visitInfo): bool {
@@ -315,12 +572,28 @@ namespace ABNetWpPostViewsAddons {
 			$score = 0;
 
 			$cfIpCountry = strtoupper(trim((string) $visitInfo->getCfIpCountry()));
-			if (!empty($cfIpCountry) && !preg_match('/^[A-Z]{2}$/', $cfIpCountry)) {
+			if ($cfIpCountry === 'T1') {
+				//Cloudflare's code for Tor exit nodes
+				$score += 20;
+			} else if ($cfIpCountry === 'XX') {
+				//Cloudflare's code for unknown country
+				$score += 5;
+			} else if (!empty($cfIpCountry) && !preg_match('/^[A-Z]{2}$/', $cfIpCountry)) {
 				$score += 10;
 			}
 
 			if ($cfIpCountry === 'RO') {
 				$score -= 5;
+			}
+
+			$score += $this->_getHostingNetworkWeight($visitInfo);
+			return $score;
+		}
+
+		private function _getHostingNetworkWeight(VisitInfo $visitInfo): int {
+			$asn = $this->_parseAsnNumber($visitInfo->getComputedAsn());
+			if ($asn > 0 && isset(self::HOSTING_ASN_WEIGHTS[$asn])) {
+				return self::HOSTING_ASN_WEIGHTS[$asn];
 			}
 
 			$networkName = trim(implode(' ', array_filter(array(
@@ -330,41 +603,29 @@ namespace ABNetWpPostViewsAddons {
 			))));
 
 			if (empty($networkName)) {
-				return $score;
+				return 0;
 			}
 
+			//AS names are usually like GOOGLE-CLOUD-PLATFORM or ORACLE-BMC-31898
 			$normalizedNetworkName = strtolower($networkName);
-			$suspiciousNetworkTokens = array(
-				'datacenter' => 12,
-				'data center' => 12,
-				'hosting' => 10,
-				'vps' => 10,
-				'proxy' => 15,
-				'vpn' => 12,
-				'amazon' => 10,
-				'aws' => 10,
-				'google cloud' => 10,
-				'microsoft azure' => 10,
-				'digitalocean' => 12,
-				'hetzner' => 12,
-				'ovh' => 12,
-				'linode' => 12,
-				'akamai' => 8,
-				'tencent' => 12,
-				'alibaba' => 12,
-				'oracle cloud' => 12,
-				'leaseweb' => 12,
-				'contabo' => 12,
-			);
+			$normalizedNetworkName = preg_replace('/[\s\-_]+/', ' ', $normalizedNetworkName);
 
-			foreach ($suspiciousNetworkTokens as $token => $weight) {
+			foreach (self::HOSTING_NETWORK_TOKEN_WEIGHTS as $token => $weight) {
 				if (str_contains($normalizedNetworkName, $token)) {
-					$score += $weight;
-					break;
+					return $weight;
 				}
 			}
 
-			return $score;
+			return 0;
+		}
+
+		private function _parseAsnNumber(string|null $asn): int {
+			//Accepts both "24940" and "AS24940"
+			if (empty($asn) || !preg_match('/^\s*(?:AS)?([0-9]+)\s*$/i', $asn, $matches)) {
+				return 0;
+			}
+
+			return (int)$matches[1];
 		}
 	}
 }

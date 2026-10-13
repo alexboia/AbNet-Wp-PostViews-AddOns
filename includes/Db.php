@@ -50,6 +50,10 @@ namespace ABNetWpPostViewsAddons {
 		private static function _migrateVisitInfoColumns(): void {
 			$columns = array(
 				'accept_content' => 'VARCHAR(255) NULL',
+				'sec_fetch_mode' => 'VARCHAR(32) NULL',
+				'sec_fetch_site' => 'VARCHAR(32) NULL',
+				'sec_fetch_dest' => 'VARCHAR(32) NULL',
+				'sec_ch_ua' => 'VARCHAR(255) NULL',
 				'cf_ip_country' => 'VARCHAR(8) NULL',
 				'cf_ip_as_name' => 'VARCHAR(255) NULL',
 				'computed_country' => 'VARCHAR(8) NULL',
@@ -126,6 +130,10 @@ namespace ABNetWpPostViewsAddons {
 				utm_term VARCHAR(255) NULL,
 				utm_content VARCHAR(255) NULL,
 				accept_content VARCHAR(255) NULL,
+				sec_fetch_mode VARCHAR(32) NULL,
+				sec_fetch_site VARCHAR(32) NULL,
+				sec_fetch_dest VARCHAR(32) NULL,
+				sec_ch_ua VARCHAR(255) NULL,
 				cf_ip_country VARCHAR(8) NULL,
 				cf_ip_as_name VARCHAR(255) NULL,
 				computed_country VARCHAR(8) NULL,

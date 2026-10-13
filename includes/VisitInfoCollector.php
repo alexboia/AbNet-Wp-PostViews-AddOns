@@ -47,6 +47,15 @@ namespace ABNetWpPostViewsAddons {
 			$data[VisitInfo::KEY_ACCEPT_CONTENT] =
 				$this->_getAcceptContent();
 
+			$data[VisitInfo::KEY_SEC_FETCH_MODE] =
+				$this->_getHeaderValue('HTTP_SEC_FETCH_MODE', 32);
+			$data[VisitInfo::KEY_SEC_FETCH_SITE] =
+				$this->_getHeaderValue('HTTP_SEC_FETCH_SITE', 32);
+			$data[VisitInfo::KEY_SEC_FETCH_DEST] =
+				$this->_getHeaderValue('HTTP_SEC_FETCH_DEST', 32);
+			$data[VisitInfo::KEY_SEC_CH_UA] =
+				$this->_getHeaderValue('HTTP_SEC_CH_UA', 255);
+
 			$data[VisitInfo::KEY_CF_IP_COUNTRY] =
 				$this->_getCfIpCountry();
 			$data[VisitInfo::KEY_CF_IP_AS_NAME] =
@@ -374,6 +383,19 @@ namespace ABNetWpPostViewsAddons {
 		private function _getAcceptContent(): string|null {
 			return !empty($_SERVER['HTTP_ACCEPT'])
 				? sanitize_text_field($_SERVER['HTTP_ACCEPT'])
+				: null;
+		}
+
+		private function _getHeaderValue(string $serverKey, int $maxLength): string|null {
+			if (empty($_SERVER[$serverKey])) {
+				return null;
+			}
+
+			$value = sanitize_text_field((string)$_SERVER[$serverKey]);
+			$value = trim(substr($value, 0, $maxLength));
+
+			return !empty($value)
+				? $value
 				: null;
 		}
 

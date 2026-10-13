@@ -154,15 +154,17 @@ The fuzzy score is based only on `VisitInfo` fields, not on the already-computed
 
 Current signals include:
 
-- suspicious or missing User-Agent values, including malformed Safari-like strings, old Chrome versions, and abandoned Windows desktop masks;
+- suspicious or missing User-Agent values, including malformed Safari-like strings, Chrome versions more than ~2 years older (or implausibly newer) than the estimated current one at the time of the visit, and abandoned Windows desktop masks;
+- browser User-Agents without the `Sec-Fetch-*` headers every modern browser sends, `HeadlessChrome` in `Sec-CH-UA`, or a Chrome version that disagrees with `Sec-CH-UA` (a complete set of browser headers lowers the score slightly);
 - missing, wildcard, or non-HTML `Accept` headers;
 - missing `Accept-Language`;
 - request methods other than `GET` or `HEAD`;
-- protocol hints such as `HTTP/1.0`, `HTTP/2`, and `HTTP/3`;
-- missing, local, or search referers;
+- protocol hints: `HTTP/1.0` raises the score, `HTTP/2` and `HTTP/3` lower it;
+- referers: missing ones or ones pointing to the visited page itself raise the score (except comment round-trips), local and search engine referers lower it;
 - missing cookies;
 - search and UTM campaign hints;
-- invalid Cloudflare country metadata and suspicious hosting/cloud network names.
+- Cloudflare country metadata (`T1` for Tor, `XX` for unknown, invalid values) and hosting/cloud networks, matched by ASN number first, then by network name;
+- browser User-Agents coming from hosting/cloud networks.
 
 ## `bots.json` Structure
 
