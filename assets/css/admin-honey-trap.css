@@ -46,7 +46,8 @@
 	margin-top: 0;
 }
 
-.abnet-honey-trap-detail-heading code {
+.abnet-honey-trap-detail-heading code,
+.abnet-honey-trap-modal-bot-signature code {
 	margin-left: 0px;
 	margin-top: 0px;
 	padding: 4px;

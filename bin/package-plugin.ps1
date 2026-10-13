@@ -6,7 +6,7 @@ param(
     [string]$PluginName = "abnet-wp-post-views-addons",
     [string]$VersionConstant = "ABNET_WP_POST_VIEWS_VERSION",
     [string]$PluginHeaderFile = "constants.php",
-    [string]$Version = "1.0.1",
+    [string]$Version = "1.5.1",
     [switch]$IncludeDevFiles = $false,
     [switch]$ExportUnarchived = $false,
     [switch]$Verbose = $false
